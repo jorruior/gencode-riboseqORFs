@@ -151,7 +151,7 @@ n_variants	Total number of additional clustered ORF isoforms
 
 seq_variants	Amino acid protein sequences of the alternative ORF isoforms
 
-all_orf_names	Original names of the identified ORFs in each Ribo-seq dataset
+all_orf_names	Original names of the identified ORFs in each Ribo-seq dataset*
 
 
 <BED_FILE>.orfs.fa: Protein sequences for all unified ORFs  (including pseudogenes and annotated CDS)
