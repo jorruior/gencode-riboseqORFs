@@ -100,53 +100,53 @@ Outputs:
 
 <BED_FILE>.orfs.out: Table with features of all unified ORFs:
 
-*orf_id	Unique identifier for each Ribo-seq ORF*
+*orf_id:	Unique identifier for each Ribo-seq ORF*
 
-*phase_id      Identifer for the Ribo-seq ORF in Phase I ('unknown' otherwise)*
+*phase_id:      Identifer for the Ribo-seq ORF in Phase I ('unknown' otherwise)*
 
-*chrm	Chromosome*
+*chrm:	Chromosome*
 
-*starts	Start exon coordinates*
+*starts:	Start exon coordinates*
 
-*ends	End exon coordinates*
+*ends:	End exon coordinates*
 
-*strand	Strand*
+*strand:	Strand*
 
-*trans	Ensembl transcript ID (v.101) of the main host transcript assigned to the ORF. When more than one transcript could be assigned to an ORF, the one with the highest APPRIS or Transcript Support Level (TSL) support was prioritized*
+*trans:	Ensembl transcript ID (v.101) of the main host transcript assigned to the ORF. When more than one transcript could be assigned to an ORF, the one with the highest APPRIS or Transcript Support Level (TSL) support was prioritized*
 
-*gene	Ensembl gene ID (v.101) of the main host gene*
+*gene:	Ensembl gene ID (v.101) of the main host gene*
 
-*gene_name	Ensembl gene name (v.101) of the main host gene*
+*gene_name:	Ensembl gene name (v.101) of the main host gene*
 
-*orf_biotype	ORF biotype based on 6 outlined categories (Box 1): Upstream ORFs (uORFs), Upstream overlapping ORFs (uoORFs), Downstream ORFs (dORFs), Downstream overlapping ORFs (doORFs), Internal out-of-frame ORFs (intORFs), Long non-coding RNA ORFs (lncRNA-ORFs)*
+*orf_biotype:	ORF biotype based on 6 outlined categories (Box 1): Upstream ORFs (uORFs), Upstream overlapping ORFs (uoORFs), Downstream ORFs (dORFs), Downstream overlapping ORFs (doORFs), Internal out-of-frame ORFs (intORFs), Long non-coding RNA ORFs (lncRNA-ORFs)*
 
-*gene_biotype	Ensembl gene biotype (v.101) of the main host gene: protein-coding or non-coding. LncRNA-ORFs in protein-coding genes are mapped to processed transcripts*
+*gene_biotype:	Ensembl gene biotype (v.101) of the main host gene: protein-coding or non-coding. LncRNA-ORFs in protein-coding genes are mapped to processed transcripts*
 
-*pep	Amino acid protein sequence*
+*pep:	Amino acid protein sequence*
 
-*orf_length	ORF length, it includes the stop codon*
+*orf_length:	ORF length, it includes the stop codon*
 
-*n_datasets	Number of Ribo-seq datasets with evidence of translation of the ORF (main ORF or any alternative clustered ORF)*
+*n_datasets:	Number of Ribo-seq datasets with evidence of translation of the ORF (main ORF or any alternative clustered ORF)*
 
-*X_study	1: The ORF was identified in this study. 0: The ORF was not identified in this study. A column per study is added to the table.*
+*X_study:	1: The ORF was identified in this study. 0: The ORF was not identified in this study. A column per study is added to the table.*
 
-*pseudogene_ov 1: The ORF overlaps a pseudogene. 0: The ORF does not overlap any pseudogene*
+*pseudogene_ov: 1: The ORF overlaps a pseudogene. 0: The ORF does not overlap any pseudogene*
 
-*CDS_ov	1: The ORF overlaps an annotated CDS in an alternative +1 or +2 frame. 0: The ORF does not overlap any CDS*
+*CDS_ov:	1: The ORF overlaps an annotated CDS in an alternative +1 or +2 frame. 0: The ORF does not overlap any CDS*
 
-*CDS_as_ov	1: The ORF overlaps an annotated CDS in an alternative antisense frame. 0: The ORF does not overlap any antisense CDS*
+*CDS_as_ov:	1: The ORF overlaps an annotated CDS in an alternative antisense frame. 0: The ORF does not overlap any antisense CDS*
 
-*all_trans	Ensembl transcript IDs (v.101) of all the transcripts that could be assigned to the ORF*
+*all_trans:	Ensembl transcript IDs (v.101) of all the transcripts that could be assigned to the ORF*
 
-*all_genes	Ensembl gene IDs (v.101) of all the genes that could be assigned to the ORF*
+*all_genes:	Ensembl gene IDs (v.101) of all the genes that could be assigned to the ORF*
 
-*all_gene_names	Ensembl gene names (v.101) of all the genes that could be assigned to the ORF*
+*all_gene_names:	Ensembl gene names (v.101) of all the genes that could be assigned to the ORF*
 
-*n_variants	Total number of additional clustered ORF isoforms*
+*n_variants:	Total number of additional clustered ORF isoforms*
 
-*seq_variants	Amino acid protein sequences of the alternative ORF isoforms*
+*seq_variants:	Amino acid protein sequences of the alternative ORF isoforms*
 
-*all_orf_names	Original names of the identified ORFs in each Ribo-seq dataset*
+*all_orf_names:	Original names of the identified ORFs in each Ribo-seq dataset*
 
 If -a is enabled, the script generates two additional files '**altmap**' and '**nomap**' with additional statistics about ORFs that did not map to the transcriptome or that map to multiple genomic regions (in this case, a random region is selected).
 
