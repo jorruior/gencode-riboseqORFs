@@ -90,9 +90,50 @@ As previously commented, if the BED including ORF coordinates is not available, 
 
 In addition, the script includes the parameter **-m** which offers two options for collapsing ORFs located in the same locus and sharing some degree of similarity. **'longest_string'** is the default parameter used to calculate Phase I ORFs and will collapse ORFs when the X. The minimum required fraction to collapse ORFs is defined by the parameter **-c** (default: 0.9). In both cases the longest ORF will be selected as representative.
 
+Outputs: 
+
+<BED_FILE>.orfs.out: Table with features of all unified ORFs:
+*orf_id	Unique identifier for each Ribo-seq ORF
+phase_id      Identifer for the Ribo-seq ORF in Phase I ('unknown' otherwise)
+chrm	Chromosome (hg38)
+starts	Start exon coordinates (hg38)
+ends	End exon coordinates (hg38)
+strand	Strand (hg38)
+trans	Ensembl transcript ID (v.101) of the main host transcript assigned to the ORF. When more than one transcript could be assigned to an ORF, the one with the highest APPRIS or Transcript Support Level (TSL) support was prioritized
+gene	Ensembl gene ID (v.101) of the main host gene
+gene_name	Ensembl gene name (v.101) of the main host gene
+orf_biotype	ORF biotype based on 6 outlined categories (Box 1): Upstream ORFs (uORFs), Upstream overlapping ORFs (uoORFs), Downstream ORFs (dORFs), Downstream overlapping ORFs (doORFs), Internal out-of-frame ORFs (intORFs), Long non-coding RNA ORFs (lncRNA-ORFs)
+gene_biotype	Ensembl gene biotype (v.101) of the main host gene: protein-coding or non-coding. LncRNA-ORFs in protein-coding genes are mapped to processed transcripts
+pep	Amino acid protein sequence
+orf_length	ORF length, it includes the stop codon
+n_datasets	Number of Ribo-seq datasets with evidence of translation of the ORF (main ORF or any alternative clustered ORF), see Table S1
+Ji_et_al_2015	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+Calviello_et_al_2016	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+Raj_et_al_2016	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+VanHeesch_et_al_2019	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+Martinez_et_al_2020	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+Chen_et_al_2020	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+Gaertner_et_al_2020	1: The ORF was identified in this study. 0: The ORF was not identified in this study
+pseudogene_ov 1: The ORF overlaps a pseudogene. 0: The ORF does not overlap any pseudogene.
+CDS_ov	1: The ORF overlaps an annotated CDS in an alternative +1 or +2 frame. 0: The ORF does not overlap any CDS.
+CDS_as_ov	1: The ORF overlaps an annotated CDS in an alternative antisense frame. 0: The ORF does not overlap any antisense CDS.
+all_trans	Ensembl transcript IDs (v.101) of all the transcripts that could be assigned to the ORF
+all_genes	Ensembl gene IDs (v.101) of all the genes that could be assigned to the ORF
+all_gene_names	Ensembl gene names (v.101) of all the genes that could be assigned to the ORF
+n_variants	Total number of additional clustered ORF isoforms.
+seq_variants	Amino acid protein sequences of the alternative ORF isoforms
+all_orf_names	Original names of the identified ORFs in each Ribo-seq dataset
+
+<BED_FILE>.orfs.fa: Protein sequences for all unified ORFs  (including pseudogenes and annotated CDS)
+
+<BED_FILE>.orfs.bed: 1-based BED file with all unified ORFs (including pseudogenes and annotated CDS)
+
+<BED_FILE>.orfs.gtf: 1-based GTF file with all unified ORFs (excluding pseudogenes and annotated CDS)  
+
 
 **TEST: GENERATING THE PHASE I RIBO-SEQ ORF LIST -Ensembl v.101-**
 ```
 bash scripts/retrieve_ensembl_data.sh 101 GRCh38
-python3 ORF_mapper_to_GENCODE.py -d Ens101 -f phaseI/sORFs_genomic_hg38.prot.20210329.fa -b phaseI/sORFs_genomic_hg38.prot.20210329.bed -m no
+python3 ORF_mapper_to_GENCODE.py -d Ens101 -f phaseI/sORFs_genomic_hg38.prot.20210329.fa -b phaseI/sORFs_genomic_hg38.prot.20210329.bed -a no
+#Pseudogenes and annotated CDS should be excluded from the output
 ```
