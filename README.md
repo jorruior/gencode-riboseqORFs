@@ -1,17 +1,46 @@
 ## README
 
-This readme is a guideline for any user that wants to use the main Methods to generate an unified set of Ribo-seq ORFs in this article:
+This readme is a guideline for any user that wants to use the main Methods to generate an unified set of Ribo-seq ORFs in this article: X
 
 While this script is designed to unify independent sets of ORFs and mapped them to a specific Ensembl version, it is not a tool to analyze ribosome-profiling data. However, GENCODE plans a Phase II to re-analyze ribosome-profiling datasets and generate consistent sets of ORFs.
 
 
 DEPENDENCIES: 
 
+This script is based on Python3 and Bash, requiring some additional packages to correctly run all steps:
+
 -**gffread** (v0.1.10) http://ccb.jhu.edu/software/stringtie/dl/gffread-0.12.6.tar.gz
 
 -**bedtools** (v2.27.1 or newer) https://github.com/arq5x/bedtools2
 
 -**Python packages: Biopython**
+
+
+INPUT FILES: 
+
+This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect a series of annotation files in a single folder <FOLDER>:
+
+PROTEOME_FASTA: Fastq file with all annotated proteins. The protein ID should be the only element in the header.
+
+TRANSCRIPTOME_FASTA: Fasta file with all transcripts. It should include both mRNA and ncRNA, and the transcript ID should be the only element in the header.
+
+SORTED_TRANSCRIPTOME_GTF: Sorted GTF file with exon and CDS sequences for the transcripts included in TRANSCRIPTOME_FASTA -Ensembl format-. Transcript IDs (field 'transcript_id') and protein IDs (field 'protein_id') should match with the IDs in the fasta files. A GTF can be sorted running this command in bash:
+```
+sort -k1,1 -k4,4n -k5,5n <TRANSCRIPTOME_GTF> > <SORTED_TRANSCRIPTOME_GTF>
+```
+TRANSCRIPT_SUPPORT: Tab-delimited file containing all transcripts IDs, Transcript Support Level (TSL) scores, and APPRIS support scores. This file will be used to prioritize transcripts that translate each ORF.
+
+PSITES_BED: File including coordinates of P-sites for the annotated proteins. This file can be obtained from the fasta file by running:
+```
+python3 ../scripts/calculate_frame_bed.py <SORTED_TRANSCRIPTOME_GTF>
+```
+
+These files can be obtained from Ensembl or GENCODE, we included a bash script to automatically download and convert all files for a specific Ensembl release:
+```
+bash scripts/retrieve_ensembl_data.sh <ENSEMBL_RELEASE (e.g. 101)> <GENOME_ASSEMBLY (e.g. GRCh38)>
+```
+Files will be stored in a new <FOLDER> named 'Ens + number of release'.
+       
 
 
 
