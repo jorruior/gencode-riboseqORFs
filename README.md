@@ -92,4 +92,7 @@ In addition, the script includes the parameter **-m** which offers two options f
 
 
 **TEST: GENERATING THE PHASE I RIBO-SEQ ORF LIST -Ensembl v.101-**
-
+```
+bash scripts/retrieve_ensembl_data.sh 101 GRCh38
+python3 ORF_mapper_to_GENCODE.py -d Ens101 -f phaseI/sORFs_genomic_hg38.prot.20210329.fa -b phaseI/sORFs_genomic_hg38.prot.20210329.bed -m no
+```
