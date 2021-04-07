@@ -148,6 +148,8 @@ Outputs:
 
 *all_orf_names	Original names of the identified ORFs in each Ribo-seq dataset*
 
+If -a is enabled, the script generates two additional files '**altmap**' and '**nomap**' with additional statistics about ORFs that did not map to the transcriptome or that map to multiple genomic regions (in this case, a random region is selected).
+
 
 **TEST: GENERATING THE PHASE I RIBO-SEQ ORF LIST -Ensembl v.101-**
 ```
