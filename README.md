@@ -41,7 +41,23 @@ python3 ../scripts/calculate_frame_bed.py <SORTED_TRANSCRIPTOME_GTF>
 
 **INPUT ORF FILES:**
 
-In addition, the pipeline will require input files with the protein sequences and coordinates of the ORFs that will be inspected and unified, tagged by study. Ideally both sequences and exonic coordinates should be included, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the protein sequences are available, please use the **-a** option in the main script. If only the exonic coordinates are available, it is possible to run a in-house script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences:
+In addition, the pipeline will require input files with the protein sequences and coordinates of the ORFs that will be inspected and unified, tagged by study. The name of the ORF needs to be concatenated with the name of the study by '--' in the FASTA file (to avoid name duplication from different studies). e.g.:
+```
+>A1BG_58858387_46aa--6_Chen2020
+MQPRAQGAVGVLRSAGDSGLAPSPPVAAQGRGLWGAGEASLIPPRN*
+>A1BG_58858945_25aa--6_Chen2020
+MPSCAARDPSPTSPSSCCARARRRP*
+>A1BG:ENST00000598345.1.3797--3_Raj2016
+MPSCAARDPSPTSPSSCCARARRRP*
+```
+Additionally, the name of the ORF and the study habe to be present in the fourth and fifth fields of the BED file. e.g.:
+```
+19      58346882        58347022        A1BG_58858387_46aa      6_Chen2020      -
+19      58347503        58347580        A1BG_58858945_25aa      6_Chen2020      -
+19      58347503        58347580        A1BG:ENST00000598345.1.3797     3_Raj2016       -
+```
+
+Ideally both sequences and exonic coordinates should be included, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the protein sequences are available, please use the **-a** option in the main script. If only the exonic coordinates are available, it is possible to run a in-house script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences with the format needed to run the pipeline:
 ```
 bash scripts/bed1_to_fasta.sh <BED_FILE>
 ```
