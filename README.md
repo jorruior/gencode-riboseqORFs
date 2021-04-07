@@ -5,7 +5,7 @@ This readme is a guideline for any user that wants to use the main Methods to ge
 While this script is designed to unify independent sets of ORFs and mapped them to a specific Ensembl version, it is not a tool to analyze ribosome-profiling data. However, GENCODE plans a Phase II to re-analyze ribosome-profiling datasets and generate consistent sets of ORFs.
 
 
-DEPENDENCIES: 
+**DEPENDENCIES:**
 
 This script is based on Python3 and Bash, requiring some additional packages to correctly run all steps:
 
@@ -16,7 +16,7 @@ This script is based on Python3 and Bash, requiring some additional packages to 
 -**Python packages: Biopython**
 
 
-INPUT ANNOTATION FILES: 
+**INPUT ANNOTATION FILES**: 
 
 This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect a series of annotation files in a single folder <FOLDER>. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
 ```
@@ -39,19 +39,18 @@ PSITES_BED: File including coordinates of P-sites for the annotated proteins. Th
 python3 ../scripts/calculate_frame_bed.py <SORTED_TRANSCRIPTOME_GTF>
 ```
 
-INPUT ORF FILES:
+**INPUT ORF FILES:**
 
-In addition, the pipeline will require input files with the protein sequences and coordinates of the ORFs that will be inspected and unified, tagged by study. Ideally both sequences and exonic coordinates should be included, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the exonic coordinates are available, it is possible to run a in-house script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences:
+In addition, the pipeline will require input files with the protein sequences and coordinates of the ORFs that will be inspected and unified, tagged by study. Ideally both sequences and exonic coordinates should be included, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the protein sequences are available, please use the **-a** option in the main script. If only the exonic coordinates are available, it is possible to run a in-house script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences:
 ```
 bash scripts/bed1_to_fasta.sh <BED_FILE>
 ```
-Outputs: <BED_FILE>.nucl.fa and <BED_FILE>.prot.fa    
+Outputs: <BED_FILE>.nucl.fa and <BED_FILE>.prot.fa   
 
 
-
-1) **getRegions.py**: Extract collapsed conserved and non-conserved regions for every gene from a set of transcripts:
+MAIN SCRIPT) **ORF_mapper_to_GENCODE.py** (--help):
 ```
-python3 getRegions.py --gtf <TRANSCRIPT_GTF> --fasta <TRANSCRIPT_FASTA> --db <BLAST_DB> -O <ORTHOLOGS_LIST> -m <PSEUDOGENES_GTF> --out <OUT_NAME> 
+python3 ORF_mapper_to_GENCODE.py -d <FOLDER> -f <ORF_PROT_FASTA> -b <ORF_BED_fileORF_mapper_to_GENCODE.py> -O <ORTHOLOGS_LIST> -m <PSEUDOGENES_GTF> --out <OUT_NAME> 
 ```
 TRANSCRIPT_GTF: Ensembl GTF or similar. Only 'exon' lines are parsed.
 
