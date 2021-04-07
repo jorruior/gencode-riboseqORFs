@@ -18,7 +18,13 @@ This script is based on Python3 and Bash, requiring some additional packages to 
 
 INPUT FILES: 
 
-This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect a series of annotation files in a single folder <FOLDER>:
+This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect a series of annotation files in a single folder <FOLDER>. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
+```
+bash scripts/retrieve_ensembl_data.sh <ENSEMBL_RELEASE (e.g. 101)> <GENOME_ASSEMBLY (e.g. GRCh38)>
+```
+Files will be stored in a new <FOLDER> named 'Ens + number of release'.
+       
+       
 
 PROTEOME_FASTA: Fastq file with all annotated proteins. The protein ID should be the only element in the header.
 
@@ -35,11 +41,7 @@ PSITES_BED: File including coordinates of P-sites for the annotated proteins. Th
 python3 ../scripts/calculate_frame_bed.py <SORTED_TRANSCRIPTOME_GTF>
 ```
 
-These files can be obtained from Ensembl or GENCODE, we included a bash script to automatically download and convert all files for a specific Ensembl release:
-```
-bash scripts/retrieve_ensembl_data.sh <ENSEMBL_RELEASE (e.g. 101)> <GENOME_ASSEMBLY (e.g. GRCh38)>
-```
-Files will be stored in a new <FOLDER> named 'Ens + number of release'.
+
        
 
 
