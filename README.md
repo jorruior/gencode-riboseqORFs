@@ -48,7 +48,8 @@ bash scripts/bed1_to_fasta.sh <BED_FILE>
 Outputs: <BED_FILE>.nucl.fa and <BED_FILE>.prot.fa   
 
 
-MAIN SCRIPT) **ORF_mapper_to_GENCODE.py** (--help):
+**MAIN SCRIPT** 
+**ORF_mapper_to_GENCODE.py** (--help):
 ```
 python3 ORF_mapper_to_GENCODE.py -d <FOLDER> -f <ORFS_FA_FILE> -b <ORFS_BED_FILE (1-based)>
 
