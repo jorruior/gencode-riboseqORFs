@@ -16,16 +16,14 @@ This script is based on Python3 and Bash, requiring some additional packages to 
 -**Python packages: Biopython**
 
 
-INPUT FILES: 
+INPUT ANNOTATION FILES: 
 
 This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect a series of annotation files in a single folder <FOLDER>. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
 ```
 bash scripts/retrieve_ensembl_data.sh <ENSEMBL_RELEASE (e.g. 101)> <GENOME_ASSEMBLY (e.g. GRCh38)>
 ```
-Files will be stored in a new <FOLDER> named 'Ens + number of release'.
+Files will be stored in a new <FOLDER> named 'Ens + number of release'. The files are:
        
-       
-
 PROTEOME_FASTA: Fastq file with all annotated proteins. The protein ID should be the only element in the header.
 
 TRANSCRIPTOME_FASTA: Fasta file with all transcripts. It should include both mRNA and ncRNA, and the transcript ID should be the only element in the header.
@@ -41,8 +39,13 @@ PSITES_BED: File including coordinates of P-sites for the annotated proteins. Th
 python3 ../scripts/calculate_frame_bed.py <SORTED_TRANSCRIPTOME_GTF>
 ```
 
+INPUT ORF FILES:
 
-       
+In addition, the pipeline will require input files with the protein sequences and coordinates of the ORFs that will be inspected and unified, tagged by study. Ideally both sequences and exonic coordinates should be included, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the exonic coordinates are available, it is possible to run a in-house script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences:
+```
+bash scripts/bed1_to_fasta.sh <BED_FILE>
+```
+Outputs: <BED_FILE>.nucl.fa and <BED_FILE>.prot.fa    
 
 
 
