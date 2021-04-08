@@ -165,7 +165,7 @@ Outputs:
 
 **pseudogene_ov:** *1: The ORF overlaps a pseudogene. 0: The ORF does not overlap any pseudogene*
 
-**CDS_ov:**	*1: The ORF overlaps an annotated CDS in an alternative +1 or +2 frame. 0: The ORF does not overlap any CDS*
+**CDS_ov:**	*1: The ORF overlaps an annotated CDS in any frame. 0: The ORF does not overlap any CDS*
 
 **CDS_as_ov:**	*1: The ORF overlaps an annotated CDS in an alternative antisense frame. 0: The ORF does not overlap any antisense CDS*
 
