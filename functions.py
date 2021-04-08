@@ -114,7 +114,7 @@ def read_support(t_support):
 
 	return appris,supp
 
-def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult):
+def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult,genomic):
 	print("Matching ORF to transcripts, it can take a while... STEP 1 - " + str(datetime.now()))
 	nomap = open(out_name + "_unmapped","w+")
 	altmap = open(out_name + "_altmapped","w+")
@@ -131,6 +131,16 @@ def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs
 		seqs[str(trans[t].seq.translate(cds = False))] = t
 		seqs[str(trans[t].seq[1:].translate(cds = False))] = t
 		seqs[str(trans[t].seq[2:].translate(cds = False))] = t
+	gen_bed = {}
+	if genomic != "none":
+		for line in open(genomic):
+			name = line.split("\t")[3] + "--" + line.split("\t")[4]
+			if not name in gen_bed:
+				gen_bed[name] = [line.split("\t")[0],int(line.split("\t")[1])-10,int(line.split("\t")[2])+10]
+			if int(line.split("\t")[1])-10 < gen_bed[name][1]:
+				gen_bed[name][1] = int(line.split("\t")[1])-10
+			if int(line.split("\t")[2])+10 > gen_bed[name][2]:		
+				gen_bed[name][2] = int(line.split("\t")[2])+10
 	n2 = 0
 	for p in prot:
 		if n2 % 5000 == 0:
@@ -190,6 +200,23 @@ def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs
 							orf_coords[1].append(gtf[t].end[n])
 
 					cumu = cumu + (gtf[t].end[n] - gtf[t].start[n] + 1)
+
+				if genomic != "none":
+					ov = 0
+					if p in gen_bed:
+						if gtf[t].chrm != gen_bed[p][0]:
+							nomap.write(p + "\tunassigned\t" + orf_seq + "\n")
+							continue
+						else:
+							for n,coord in enumerate(orf_coords[0]):
+								if (orf_coords[0][n] >= gen_bed[p][1] and orf_coords[0][n] <= gen_bed[p][2]) or (orf_coords[1][n] >= gen_bed[p][1]) and (orf_coords[1][n] <= gen_bed[p][2]):
+									ov = 1
+							if ov == 0:
+								nomap.write(p + "\tunassigned\t" + orf_seq + "\n")
+								continue
+					else:
+						nomap.write(p + "\tunassigned\t" + orf_seq + "\n")
+						continue
 
 				if len(done_coords) > 0: #Some ORFs can map to multiple genomic regions
 					if (orf_coords[0][0] != done_coords[0][0]) and (orf_coords[1][-1] != done_coords[1][-1]):
@@ -442,7 +469,7 @@ def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder,se
 	return exc,variants,variants_names,datasets
 
 
-def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed):
+def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed,genomic):
 	'''Select main transcript and write output'''
 	print("Writing output")
 	#Check Riboseq ORF annotations
@@ -471,7 +498,7 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 	out4 = open(out_name + ".orfs.fa","w+")
 	outf = open(out_name + ".orfs.frames.bed","w+")
 	outlogs = open(out_name + ".logs","w+")
-	outlogs.write("input fasta:" + orfs_fa_file + "\ninput bed: " + orfs_bed_file + "\nannotation folder:" + folder + "\nmin_ength_cutoff: " + str(len_cutoff) + "\nmax_length_cutoff: " + str(max_len_cutoff).replace("999999999999","none") + "\ncollapse_method: " + str(method) + "\ncollapse_cutoff: " + str(col_thr) + "\ntotal_studies: " + ";".join(total_studies))
+	outlogs.write("input fasta: " + orfs_fa_file + "\ninput bed: " + orfs_bed_file + "\nannotation folder:" + folder + "\nmin_length_cutoff: " + str(len_cutoff) + "\nmax_length_cutoff: " + str(max_len_cutoff).replace("999999999999","none") + "\ncollapse_method: " + str(method) + "\ncollapse_cutoff: " + str(col_thr) + "\ngenomic_bed : " + str(genomic) + "\ntotal_studies: " + ";".join(total_studies) + "\n\n")
 	for orf in candidates:
 		if orf in exc:
 			continue
