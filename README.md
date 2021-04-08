@@ -80,10 +80,10 @@ Options:
                         FASTA can be generated from a BED file using the
                         script 'bed1_to_fasta.sh'
   -b ORFS_BED_FILE, --input_bed=ORFS_BED_FILE
-                        File with 1-based BED coordinates of all translated
+                        (Required) File with 1-based BED coordinates of all translated
                         candidate ORFs. ORF names should match in both fasta
                         and bed files. If -m is activated, the BED coordinates
-                        willbe written into this file.
+                        will be written into this file.
   -o OUT_NAME, --output=OUT_NAME
                         Tag name for the generated output files. Default: BED
                         filename
