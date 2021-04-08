@@ -112,13 +112,14 @@ def read_support(t_support):
 
 	return appris,supp
 
-def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file):
+def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult):
 	print("Matching ORF to transcripts, it can take a while... STEP 1 - " + str(datetime.now()))
-	bedout = open(orfs_bed_file,"w+")
-	nomap = open(orfs_bed_file + "_unmapped","w+")
-	altmap = open(orfs_bed_file + "_altmapped","w+")
+	nomap = open(out_name + "_unmapped","w+")
+	altmap = open(out_name + "_altmapped","w+")
 	trans_sequences = []
 	seqs = {}
+	lines = []
+	multiple = []
 	for t in trans:
 		if not t in gtf:
 			continue
@@ -167,7 +168,7 @@ def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file):
 
 				cumu = 0
 				op = 0
-				orf_coords = ([],[])
+				orf_coords = ([],[],gtf[t].chrm,gtf[t].strand)
 				for n in range(len(gtf[t].start)):
 					if op == 0:
 						if (cumu + (gtf[t].end[n] - gtf[t].start[n] + 1) ) >= o[0]:
@@ -187,18 +188,26 @@ def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file):
 
 				if len(done_coords) > 0: #Some ORFs can map to multiple genomic regions
 					if (orf_coords[0][0] != done_coords[0][0]) and (orf_coords[1][-1] != done_coords[1][-1]):
-						altmap.write(p + "\taltmap\t" + orf_seq + "\t" + ";".join(map(str,orf_coords[0])) + "\t" + ";".join(map(str,orf_coords[1])) + "\t" + ";".join(map(str,done_coords[0])) + "\t" + ";".join(map(str,done_coords[1])) + "\t" + t + "\n")
+						altmap.write(p + "\taltmap\t" + orf_seq + "\t" + gtf[t].chrm + "\t" + gtf[t].strand + "\t" + ";".join(map(str,orf_coords[0])) + "\t" + ";".join(map(str,orf_coords[1])) + "\t" + done_coords[2] + "\t" + done_coords[3] + "\t" + ";".join(map(str,done_coords[0])) + "\t" + ";".join(map(str,done_coords[1])) + "\n")
+						multiple.append(p)
 						break
 					for n,coord in enumerate(orf_coords[0]):						
 						if (orf_coords[0][n] != done_coords[0][n]) or (orf_coords[1][n] != done_coords[1][n]):
-							altmap.write(p + "\taltexons\t" + orf_seq + "\t" + ";".join(map(str,orf_coords[0])) + "\t" + ";".join(map(str,orf_coords[1])) + "\t" + ";".join(map(str,done_coords[0])) + "\t" + ";".join(map(str,done_coords[1])) + "\t" + t + "\n")
+							altmap.write(p + "\taltexons\t" + orf_seq + "\t" + gtf[t].chrm + "\t" + gtf[t].strand + "\t" + ";".join(map(str,orf_coords[0])) + "\t" + ";".join(map(str,orf_coords[1])) + "\t" + done_coords[2] + "\t" + done_coords[3] + "\t" + ";".join(map(str,done_coords[0])) + "\t" + ";".join(map(str,done_coords[1])) + "\n")
+							multiple.append(p)
 							break
 				else:
 					for n,coord in enumerate(orf_coords[0]):
-						bedout.write(gtf[t].chrm + "\t" + str(orf_coords[0][n]) + "\t" + str(orf_coords[1][n]) + "\t" + p.split("--")[0] + "\t" + p.split("--")[1] + "\t" + gtf[t].strand + "\n")
+						lines.append(gtf[t].chrm + "\t" + str(orf_coords[0][n]) + "\t" + str(orf_coords[1][n]) + "\t" + p.split("--")[0] + "\t" + p.split("--")[1] + "\t" + gtf[t].strand + "\n")
 					done_coords = orf_coords
 		else:
 			nomap.write(p + "\tunmapped\t" + orf_seq + "\n")
+	bedout = open(orfs_bed_file,"w+")
+	for line in lines:
+		if (mult == "no") and (line.split("\t")[3] + "--" + line.split("\t")[4] in multiple):
+			nomap.write(line.split("\t")[3] + "--" + line.split("\t")[4] + "\tmultiple_coords\t" + orf_seq + "\n")
+		else:
+			bedout.write(line)
 	bedout.close()
 	nomap.close()
 	altmap.close()
@@ -422,7 +431,7 @@ def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder):
 	return exc,variants,variants_names,datasets
 
 
-def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder):
+def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name):
 	'''Select main transcript and write output'''
 	print("Writing output")
 	#Check Riboseq ORF annotations
@@ -442,14 +451,14 @@ def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,a
 
 	outs = []
 	outs2 = []
-	out = open(folder + "/" + orfs_bed_file.split("/")[-1] + "." + str(len_cutoff) + "." + str(col_thr) + ".orfs.out","w+")
+	out = open(out_name + ".orfs.out","w+")
 	out.write("orf_id\tphaseI_id\tchrm\tstarts\tends\tstrand\ttrans\tgene\tgene_name\torf_biotype\tgene_biotype\tpep\torf_length\tn_datasets\t")
 	out.write("\t".join(total_studies))
 	out.write("\tpseudogene_ov\tCDS_ov\tCDS_as_ov\tall_trans\tall_genes\tall_gene_names\tn_variants\tseq_variants\tall_orf_names\n")
-	out3 = open(folder + "/" + orfs_bed_file.split("/")[-1] + "." + str(len_cutoff) + "." + str(col_thr) + ".orfs.bed","w+")
-	out3b = open(folder + "/" + orfs_bed_file.split("/")[-1] + "." + str(len_cutoff) + "." + str(col_thr) + ".orfs.gtf","w+")
-	out4 = open(folder + "/" + orfs_bed_file.split("/")[-1] + "." + str(len_cutoff) + "." + str(col_thr) + ".orfs.fa","w+")
-	outf = open(folder + "/tmp/" + orfs_bed_file.split("/")[-1] + "." + str(len_cutoff) + "." + str(col_thr) + ".orfs.frames.bed","w+")
+	out3 = open(out_name + ".orfs.bed","w+")
+	out3b = open(out_name + ".orfs.gtf","w+")
+	out4 = open(out_name + ".orfs.fa","w+")
+	outf = open(out_name + ".orfs.frames.bed","w+")
 	for orf in candidates:
 		if orf in exc:
 			continue
