@@ -184,7 +184,7 @@ ENST00000075120_71_149--4_VanHeesch2019 unmapped        MIPARPRDAVMVRLWILPEDVEKT
 ENST00000616540_42_66--7_Gaertner2020   nanoORF MSARSPTS*
 A1BG-AS1_58865324_38aa--6_Chen2020      NTG     LVHSAWCDPPRLWSRISTQVIQLRPALPRPTRDMCSVT*
 ```
-In this example, the first ORF was not fully map to any transcript isoform (**unmapped**), the second ORF was shorter than the minimum length cut-off (**nanoORF**), and the third ORF started with a near-cognate ORF (**NTG**, these cases can be included with the option -a NTG or -a XTG). If **--multiple=no**, altmapped ORFs are also included in this file (tag **multiple_coords**).
+In this example, the first ORF was not fully map to any transcript isoform (**unmapped**), the second ORF was shorter than the minimum length cut-off (**nanoORF**), and the third ORF started with a near-cognate ORF (**NTG**, these cases can be included with the option -a NTG or -a XTG). If **--multiple=no**, altmapped ORFs are also included in this file (tag **multiple_coords**). If **--max_len_cutoff** is used, excluded ORFs are also included in this file (tag **longORF**).
 
 
 
