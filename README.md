@@ -50,7 +50,7 @@ MPSCAARDPSPTSPSSCCARARRRP*
 >A1BG:ENST00000598345.1.3797--3_Raj2016
 MPSCAARDPSPTSPSSCCARARRRP*
 ```
-Additionally, both the name of the ORF and the study have to be present in the fourth and fifth fields of the BED file. e.g.:
+Additionally, both the name of the ORF and the study have to be present in the fourth and fifth fields of the BED files. e.g.:
 ```
 19      58346882        58347022        A1BG_58858387_46aa      6_Chen2020      -
 19      58347503        58347580        A1BG_58858945_25aa      6_Chen2020      -
@@ -79,17 +79,20 @@ Options:
                         (Required) File with all translated candidate ORFs. A
                         FASTA can be generated from a BED file using the
                         script 'bed1_to_fasta.sh'
-  -b ORFS_BED_FILE, --input_bed=ORFS_BED_FILE
-                        (Required) File with 1-based BED coordinates of all translated
-                        candidate ORFs. ORF names should match in both fasta
-                        and bed files. If -m is activated, the BED coordinates
-                        will be written into this file.
+  -b ORFS_BED_FILE, --bed=ORFS_BED_FILE
+                        (Required) File with 1-based BED coordinates of all
+                        translated candidate ORFs. ORF names should match in
+                        both fasta and bed files. If -a is activated, the BED
+                        coordinates will be written into this file.
   -o OUT_NAME, --output=OUT_NAME
                         Tag name for the generated output files. Default: BED
                         filename
-  -l LEN_CUTOFF, --len_cutoff=LEN_CUTOFF
+  -l LEN_CUTOFF, --min_len_cutoff=LEN_CUTOFF
                         Minimum ORF length threshold in amino acids (without
                         stop codon). default=16
+  -L MAX_LEN_CUTOFF, --max_len_cutoff=MAX_LEN_CUTOFF
+                        Maximum ORF length threshold in amino acids (without
+                        stop codon). default=none
   -c COL_THR, --collapse_cutoff=COL_THR
                         Minimum required fraction to collapse ORFs with
                         similar stretches of overlapping amino-acid sequences.
@@ -102,14 +105,23 @@ Options:
                         psites is above -c threshold
   -a CALCULATE_COORDINATES, --make_annot_bed=CALCULATE_COORDINATES
                         If ORF BED file is not available, generate it from the
-                        FASTA file. (ATG/NTG/XTG/no, default = no)
+                        FASTA file. WARNING: BED file will be writen to the
+                        filename given by -b/--bed. (ATG/NTG/XTG/no, default =
+                        no)
   --multiple=MULT       If -a option is activated, include ORFs that map to
                         multiple genomic coordinates. (yes/no, default = yes)
+  -g GENOMIC, --genomic=GENOMIC
+                        If -a option is activated, this optional argument uses
+                        a BED file with ORF genomic coordinates to help
+                        mapping ORF sequences to the correct exon-intron
+                        positions. Use 'none' if no file is given or -a is not
+                        activated. (default = none)
+
                         
 ```
-If the BED file including ORF coordinates is not available, the option **-a** should be enabled and the BED coordinates will be written into the file specified by the option **-b**. If **-a** is set to *no* (default), **-b** BED file will be used as input for extracting ORF coordinates. **-a** has three different writing options: **ATG** will write all ORF starting with ATG codon; **NTG** will write all ORFs starting with non-ATG codons, **XTG** will write all ORFs regardless of the translation initiation codon. The first Phase I ORF dataset was generated including ATG ORFs.
+If the BED file including ORF coordinates is not available, the option **-a** should be enabled and the BED coordinates will be written into the file specified by the option **-b**. If **-a** is set to *no* (default), **-b** BED file will be used as input for extracting ORF coordinates. **-a** has three different writing options: **ATG** will write all ORF starting with ATG codon; **NTG** will write all ORFs starting with non-ATG codons, **XTG** will write all ORFs regardless of the translation initiation codon. The first Phase I ORF dataset was generated including ATG ORFs. Additionally, there is the possibility of including an additional 'guide' BED file (**-g**) to limit ORF mapping to transcript sequences included in the ranges defined by this file. Unlike the main BED file, this annotation file do not need to include intron coordinates and can only include the genomic loci coordinates where the ORF should be found. This parameter is optional and included for the studies that only generated output sequences and genomic coordinates without introns.
 
-In addition, the script includes the parameter **-m** which offers two options for collapsing ORFs located in the same locus and sharing some degree of similarity. **'longest_string'** is the default parameter used to calculate Phase I ORFs and will collapse pairs of overlapping ORFs when the length of the longest shared amino acid string divided by the length of the short ORF is higher or equal than **-c** (default: 0.9). **'psite_overlap'** will collapse pairs of overlapping ORFs sharing a minimum fraction of P-site positions higher or equal than **-c** (default: 0.9). In both cases the longest ORF will be selected as representative and the shorter ORFs will be considered as variants, with the possibility of a variant being assigned to two or more independent ORFs.
+Moreover, the script includes the parameter **-m** which offers two options for collapsing ORFs located in the same locus and sharing some degree of similarity. **'longest_string'** is the default parameter used to calculate Phase I ORFs and will collapse pairs of overlapping ORFs when the length of the longest shared amino acid string divided by the length of the short ORF is higher or equal than **-c** (default: 0.9). **'psite_overlap'** will collapse pairs of overlapping ORFs sharing a minimum fraction of P-site positions higher or equal than **-c** (default: 0.9). In both cases the longest ORF will be selected as representative and the shorter ORFs will be considered as variants, with the possibility of a variant being assigned to two or more independent ORFs.
 
 Outputs: 
 
