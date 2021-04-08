@@ -177,9 +177,9 @@ Outputs:
 
 **n_variants:**	*Total number of additional clustered ORF isoforms*
 
-*seq_variants:	Amino acid protein sequences of the alternative ORF isoforms*
+**seq_variants**:	*Amino acid protein sequences of the alternative ORF isoforms*
 
-*all_orf_names:	Original names of the identified ORFs in each Ribo-seq dataset*
+**all_orf_names**:	*Original names of the identified ORFs in each Ribo-seq dataset*
 
 If **-a** is enabled, the script generates two additional files '<OUT_NAME>.**altmapped**' and '<OUT_NAME>.**unmapped**' with additional statistics about ORFs that did not map to the transcriptome or that map to multiple genomic regions (in this case, a random region is selected if **--multiple** is set to yes). 
 
@@ -196,7 +196,7 @@ ENST00000075120_71_149--4_VanHeesch2019 unmapped        MIPARPRDAVMVRLWILPEDVEKT
 ENST00000616540_42_66--7_Gaertner2020   nanoORF MSARSPTS*
 A1BG-AS1_58865324_38aa--6_Chen2020      NTG     LVHSAWCDPPRLWSRISTQVIQLRPALPRPTRDMCSVT*
 ```
-In this example, the first ORF was not fully map to any transcript isoform (**unmapped**), the second ORF was shorter than the minimum length cut-off (**nanoORF**), and the third ORF started with a near-cognate ORF (**NTG**, these cases can be included with the option -a NTG or -a XTG). If **--multiple=no**, altmapped ORFs are also included in this file (tag **multiple_coords**). If **--max_len_cutoff** or **-g* is used, excluded ORFs are also included in this file (**longORF** and **unassigned**).
+In this example, the first ORF was not fully map to any transcript isoform (**unmapped**), the second ORF was shorter than the minimum length cut-off (**nanoORF**), and the third ORF started with a near-cognate ORF (**NTG**, these cases can be included with the option -a NTG or -a XTG). If **--multiple=no**, altmapped ORFs are also included in this file (tag **multiple_coords**). If **--max_len_cutoff** or **-g* is used, excluded ORFs are also included in this file (tags **longORF** and **unassigned**).
 
 
 
