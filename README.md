@@ -7,18 +7,18 @@ While this script is designed to unify independent sets of ORFs and mapped them 
 
 **DEPENDENCIES:**
 
-This script is based on Python3 and Bash, requiring some additional packages to correctly run all steps:
+This script is based on python3 and bash, requiring some additional packages to correctly run all steps:
 
 -**gffread** (v0.1.10) http://ccb.jhu.edu/software/stringtie/dl/gffread-0.12.6.tar.gz
 
 -**bedtools** (v2.27.1 or newer) https://github.com/arq5x/bedtools2
 
--**Python packages: Biopython**
+-**Python3 packages: Biopython**
 
 
 **INPUT ANNOTATION FILES**: 
 
-This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect a series of annotation files in a single folder <FOLDER>. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
+This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect all annotation files in a single folder <FOLDER> that will be required as input for the main script. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
 ```
 bash scripts/retrieve_ensembl_data.sh <ENSEMBL_RELEASE (e.g. 101)> <GENOME_ASSEMBLY (e.g. GRCh38)>
 ```
@@ -32,7 +32,7 @@ SORTED_TRANSCRIPTOME_GTF: Sorted GTF file with exon and CDS sequences for the tr
 ```
 sort -k1,1 -k4,4n -k5,5n <TRANSCRIPTOME_GTF> > <SORTED_TRANSCRIPTOME_GTF>
 ```
-TRANSCRIPT_SUPPORT: Tab-delimited file containing all transcripts IDs, Transcript Support Level (TSL) scores, and APPRIS support scores. This file will be used to prioritize transcripts that translate each ORF.
+TRANSCRIPT_SUPPORT: Tab-delimited file containing all transcripts IDs, Transcript Support Level (TSL) scores, and APPRIS support scores. This file will be used to prioritize transcripts that translate each ORF. **<This file has to be downloaded from Ensembl Biomart, a downloaded compatible file based on Ensembl v.101 is located in the folder Ens101>**
 
 PSITES_BED: File including coordinates of P-sites for the annotated proteins. This file can be obtained from the fasta file by running:
 ```
@@ -50,14 +50,14 @@ MPSCAARDPSPTSPSSCCARARRRP*
 >A1BG:ENST00000598345.1.3797--3_Raj2016
 MPSCAARDPSPTSPSSCCARARRRP*
 ```
-Additionally, the name of the ORF and the study habe to be present in the fourth and fifth fields of the BED file. e.g.:
+Additionally, both the name of the ORF and the study have to be present in the fourth and fifth fields of the BED file. e.g.:
 ```
 19      58346882        58347022        A1BG_58858387_46aa      6_Chen2020      -
 19      58347503        58347580        A1BG_58858945_25aa      6_Chen2020      -
 19      58347503        58347580        A1BG:ENST00000598345.1.3797     3_Raj2016       -
 ```
 
-Ideally both sequences and exonic coordinates should be included, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the protein sequences are available, please use the **-a** option in the main script. If only the exonic coordinates are available, it is possible to run a in-house script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences with the format needed to run the pipeline:
+Ideally both sequences and exonic coordinates should be included as input for the main script, but ORF studies are very heterogeneous and sometimes only sequences or coordinates are available. If only the protein sequences are available, please use the **-a** option in the main script. If only the exonic coordinates are available, it is possible to run this in-house bash script to convert **1-based (Important: All BED/GTF coordinate files should be 1-based)** BED coordinates (<BED_FILE>) into protein sequences with the format needed to run the pipeline:
 ```
 bash scripts/bed1_to_fasta.sh <BED_FILE>
 ```
@@ -102,9 +102,9 @@ Options:
                         FASTA file. (ATG/NTG/XTG/no, default = no)
 
 ```
-As previously commented, if the BED including ORF coordinates is not available, the option **-a** should be enabled and the BED file will be written into the file specified by the option **-b**. If **-a** is set to *no* (default), the **-b** BED file will be used as input for extracting ORF coordinates. **-a** has three different writing options: **ATG** will write all ORF starting with ATG codon; **NTG** will write all ORFs starting with non-ATG codons, **XTG** will write all ORFs regardless of the translation initiation codon. The first Phase I ORF dataset was generated including uniquely ATG ORFs.
+If the BED file including ORF coordinates is not available, the option **-a** should be enabled and the BED coordinates will be written into the file specified by the option **-b**. If **-a** is set to *no* (default), **-b** BED file will be used as input for extracting ORF coordinates. **-a** has three different writing options: **ATG** will write all ORF starting with ATG codon; **NTG** will write all ORFs starting with non-ATG codons, **XTG** will write all ORFs regardless of the translation initiation codon. The first Phase I ORF dataset was generated including ATG ORFs.
 
-In addition, the script includes the parameter **-m** which offers two options for collapsing ORFs located in the same locus and sharing some degree of similarity. **'longest_string'** is the default parameter used to calculate Phase I ORFs and will collapse ORFs when the X. The minimum required fraction to collapse ORFs is defined by the parameter **-c** (default: 0.9). In both cases the longest ORF will be selected as representative.
+In addition, the script includes the parameter **-m** which offers two options for collapsing ORFs located in the same locus and sharing some degree of similarity. **'longest_string'** is the default parameter used to calculate Phase I ORFs and will collapse pairs of overlapping ORFs when the length of the longest shared amino acid string divided by the length of the short ORF is higher or equal than **-c** (default: 0.9). **'psite_overlap'** will collapse pairs of overlapping ORFs sharing a minimum fraction of P-site positions higher or equal than **-c** (default: 0.9). In both cases the longest ORF will be selected as representative and the shorter ORFs will be considered as variants, with the possibility of a variant being assigned to two or more independent ORFs.
 
 Outputs: 
 
@@ -116,55 +116,71 @@ Outputs:
 
 <BED_FILE>.orfs.out: Table with features of all unified ORFs:
 
-*orf_id:	Unique identifier for each Ribo-seq ORF*
+**orf_id:**	*Unique identifier for each Ribo-seq ORF*
 
-*phase_id:      Identifer for the Ribo-seq ORF in Phase I ('unknown' otherwise)*
+**phase_id:**     *Identifer for the Ribo-seq ORF in Phase I ('unknown' otherwise)*
 
-*chrm:	Chromosome*
+**chrm:**	*Chromosome*
 
-*starts:	Start exon coordinates*
+**starts:**	*Start exon coordinates*
 
-*ends:	End exon coordinates*
+**ends:**	*End exon coordinates*
 
-*strand:	Strand*
+**strand:**	*Strand*
 
-*trans:	Ensembl transcript ID (v.101) of the main host transcript assigned to the ORF. When more than one transcript could be assigned to an ORF, the one with the highest APPRIS or Transcript Support Level (TSL) support was prioritized*
+**trans:**	*Ensembl transcript ID (v.101) of the main host transcript assigned to the ORF. When more than one transcript could be assigned to an ORF, the one with the highest APPRIS or Transcript Support Level (TSL) support was prioritized*
 
-*gene:	Ensembl gene ID (v.101) of the main host gene*
+**gene:**	*Ensembl gene ID (v.101) of the main host gene*
 
-*gene_name:	Ensembl gene name (v.101) of the main host gene*
+**gene_name:**	*Ensembl gene name (v.101) of the main host gene*
 
-*orf_biotype:	ORF biotype based on 6 outlined categories (Box 1): Upstream ORFs (uORFs), Upstream overlapping ORFs (uoORFs), Downstream ORFs (dORFs), Downstream overlapping ORFs (doORFs), Internal out-of-frame ORFs (intORFs), Long non-coding RNA ORFs (lncRNA-ORFs)*
+**orf_biotype:**	*ORF biotype based on 6 outlined categories (Box 1): Upstream ORFs (uORFs), Upstream overlapping ORFs (uoORFs), Downstream ORFs (dORFs), Downstream overlapping ORFs (doORFs), Internal out-of-frame ORFs (intORFs), Long non-coding RNA ORFs (lncRNA-ORFs)*
 
-*gene_biotype:	Ensembl gene biotype (v.101) of the main host gene: protein-coding or non-coding. LncRNA-ORFs in protein-coding genes are mapped to processed transcripts*
+**gene_biotype:**	*Ensembl gene biotype (v.101) of the main host gene: protein-coding or non-coding. LncRNA-ORFs in protein-coding genes are mapped to processed transcripts*
 
-*pep:	Amino acid protein sequence*
+**pep:**	*Amino acid protein sequence*
 
-*orf_length:	ORF length, it includes the stop codon*
+**orf_length:**	*ORF length, it includes the stop codon*
 
-*n_datasets:	Number of Ribo-seq datasets with evidence of translation of the ORF (main ORF or any alternative clustered ORF)*
+**n_datasets:**	*Number of Ribo-seq datasets with evidence of translation of the ORF (main ORF or any alternative clustered ORF)*
 
-*X_study:	1: The ORF was identified in this study. 0: The ORF was not identified in this study. A column per study is added to the table.*
+**X_study:**	*1: The ORF was identified in this study. 0: The ORF was not identified in this study. A column per study is added to the table.*
 
-*pseudogene_ov: 1: The ORF overlaps a pseudogene. 0: The ORF does not overlap any pseudogene*
+**pseudogene_ov:** *1: The ORF overlaps a pseudogene. 0: The ORF does not overlap any pseudogene*
 
-*CDS_ov:	1: The ORF overlaps an annotated CDS in an alternative +1 or +2 frame. 0: The ORF does not overlap any CDS*
+**CDS_ov:**	*1: The ORF overlaps an annotated CDS in an alternative +1 or +2 frame. 0: The ORF does not overlap any CDS*
 
-*CDS_as_ov:	1: The ORF overlaps an annotated CDS in an alternative antisense frame. 0: The ORF does not overlap any antisense CDS*
+**CDS_as_ov:**	*1: The ORF overlaps an annotated CDS in an alternative antisense frame. 0: The ORF does not overlap any antisense CDS*
 
-*all_trans:	Ensembl transcript IDs (v.101) of all the transcripts that could be assigned to the ORF*
+**all_trans:**	*Ensembl transcript IDs (v.101) of all the transcripts that could be assigned to the ORF*
 
-*all_genes:	Ensembl gene IDs (v.101) of all the genes that could be assigned to the ORF*
+**all_genes:**	*Ensembl gene IDs (v.101) of all the genes that could be assigned to the ORF*
 
-*all_gene_names:	Ensembl gene names (v.101) of all the genes that could be assigned to the ORF*
+**all_gene_names:**	*Ensembl gene names (v.101) of all the genes that could be assigned to the ORF*
 
-*n_variants:	Total number of additional clustered ORF isoforms*
+**n_variants:**	*Total number of additional clustered ORF isoforms*
 
 *seq_variants:	Amino acid protein sequences of the alternative ORF isoforms*
 
 *all_orf_names:	Original names of the identified ORFs in each Ribo-seq dataset*
 
-If -a is enabled, the script generates two additional files '**altmap**' and '**nomap**' with additional statistics about ORFs that did not map to the transcriptome or that map to multiple genomic regions (in this case, a random region is selected).
+If **-a** is enabled, the script generates two additional files '<BED_FILE>**altmapped**' and '<BED_FILE>**unmapped**' with additional statistics about ORFs that did not map to the transcriptome or that map to multiple genomic regions (in this case, a random region is selected). 
+
+Example of an **altmapped** output file:
+```
+BET1L_180332_35aa--6_Chen2020   altmap  MAPPEGARSRPNQLPAEVPEAARSFNFLRAARGSC*    138230979       138231086       180226  180333  ENST00000446912
+BRCA1:NM_007297:chr17:-:194:274--1_Ji2015       altexons        MDLSALRVEEVQNVINAMQKILECPI*     43121676;43124017       43121679;43124096       43106533;43124017       43106536;43124096       ENST00000652672
+```
+In this example, the first ORF maps to two alternative genomic loci (the selected X:138230979-138231086 and the alternative X:180226-180333). The second ORF maps to the same genomic loci but there are two different possible 1st exon combinations (the selected two-exon ORF X:43121676-43121679 and X:43124017-43124096 and the alternative X:43106533-43106536 and X:43124017-43124096).
+
+Example of an **unmapped** output file:
+```
+ENST00000075120_71_149--4_VanHeesch2019 unmapped        MIPARPRDAVMVRLWILPEDVEKTCC*
+ENST00000616540_42_66--7_Gaertner2020   nanoORF MSARSPTS*
+A1BG-AS1_58865324_38aa--6_Chen2020      NTG     LVHSAWCDPPRLWSRISTQVIQLRPALPRPTRDMCSVT*
+```
+In this example, the first ORF was not fully map to any transcript isoform (**unmapped**), the second ORF was shorter than the minimum length cut-off (**nanoORF**), and the third ORF started with a near-cognate ORF (**NTG**, these cases can be included with the option -a NTG or -a XTG).
+
 
 
 **TEST: GENERATING THE PHASE I RIBO-SEQ ORF LIST -Ensembl v.101-**
