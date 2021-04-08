@@ -3,6 +3,8 @@ import sys
 import string
 import subprocess
 import os
+import random
+import string
 from Bio import SeqIO
 from Bio.Seq import Seq
 from datetime import datetime
@@ -112,7 +114,7 @@ def read_support(t_support):
 
 	return appris,supp
 
-def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult):
+def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult):
 	print("Matching ORF to transcripts, it can take a while... STEP 1 - " + str(datetime.now()))
 	nomap = open(out_name + "_unmapped","w+")
 	altmap = open(out_name + "_altmapped","w+")
@@ -139,6 +141,9 @@ def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file,out_n
 		if len(orf_seq) < (len_cutoff + 1):
 			nomap.write(p + "\tnanoORF\t" + orf_seq + "\n")
 			continue
+		elif len(orf_seq) > max_len_cutoff:
+			nomap.write(p + "\tlongORF\t" + orf_seq + "\n")
+			continue	
 		elif (calculate_coordinates == "ATG") and (orf_seq[0] != "M"):
 			nomap.write(p + "\tNTG\t" + orf_seq + "\n")
 			continue #Perhaps save in a different file
@@ -203,9 +208,12 @@ def make_bed(prot,trans,gtf,len_cutoff,calculate_coordinates,orfs_bed_file,out_n
 		else:
 			nomap.write(p + "\tunmapped\t" + orf_seq + "\n")
 	bedout = open(orfs_bed_file,"w+")
+	done = []
 	for line in lines:
 		if (mult == "no") and (line.split("\t")[3] + "--" + line.split("\t")[4] in multiple):
-			nomap.write(line.split("\t")[3] + "--" + line.split("\t")[4] + "\tmultiple_coords\t" + orf_seq + "\n")
+			if not line.split("\t")[3] + "--" + line.split("\t")[4] in done:
+				nomap.write(line.split("\t")[3] + "--" + line.split("\t")[4] + "\tmultiple_coords\t" +  str(prot[line.split("\t")[3] + "--" + line.split("\t")[4]].seq).replace("*","") + "*" + "\n")
+			done.append(line.split("\t")[3] + "--" + line.split("\t")[4])
 		else:
 			bedout.write(line)
 	bedout.close()
@@ -220,10 +228,11 @@ def insersect_orf_gtf(orfs_bed_file,transcriptome_gtf_file,folder):
 	overlaps_cds = {}
 	other_overlaps = {}
 	total_studies = []
-	out = open(folder + '/tmp/orfs_to_gtf.ov','w+')
+	seed = ''.join(random.choice(string.ascii_letters) for i in range(10))
+	out = open(folder + '/tmp/' + seed + 'orfs_to_gtf.ov','w+')
 	subprocess.call(['intersectBed', '-a', orfs_bed_file, '-b', transcriptome_gtf_file, '-wo'], stdout=out)
 	out.close()
-	for line in open(folder + '/tmp/orfs_to_gtf.ov'):
+	for line in open(folder + '/tmp/' + seed + 'orfs_to_gtf.ov'):
 		if line.split("\t")[5] != line.split("\t")[12]:
 			continue
 		if "\ttranscript\t" in line:
@@ -245,13 +254,13 @@ def insersect_orf_gtf(orfs_bed_file,transcriptome_gtf_file,folder):
 			prot = line.split('protein_id "')[1].split('"')[0]
 			overlaps_cds[trans] = prot
 	total_studies.sort()
-	return overlaps,overlaps_cds,other_overlaps,total_studies
+	return overlaps,overlaps_cds,other_overlaps,total_studies,seed
 
 
-def pseudo_or_cds_ov(orfs_bed_file,transcriptome_gtf_file,other_overlaps,folder):
+def pseudo_or_cds_ov(orfs_bed_file,transcriptome_gtf_file,other_overlaps,folder,seed):
 	'''Intersect with pseudogenes or CDS in any strand and any frame'''
 	print("Intersecting ORFs with transcriptome")
-	for line in open(folder + '/tmp/orfs_to_gtf.ov'):
+	for line in open(folder + '/tmp/' + seed + 'orfs_to_gtf.ov'):
 		if ("\texon\t" in line) and ("pseudogene" in line) and (line.split("\t")[5] == line.split("\t")[12]):
 			name = line.split("\t")[3] + "--" + line.split("\t")[4]
 			other_overlaps.setdefault(name,["0","0","0"])
@@ -267,10 +276,10 @@ def pseudo_or_cds_ov(orfs_bed_file,transcriptome_gtf_file,other_overlaps,folder)
 	return other_overlaps
 
 
-def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_cutoff,folder):
+def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_cutoff,max_len_cutoff,folder,seed):
 	'''Check the relative overlap of the ORFs in transcript(s)'''
 	print("Checking for ORF overlaps in transcriptome")
-	atgstop = open(folder + "/tmp/atg_to_stop.bed","w+")
+	atgstop = open(folder + '/tmp/' + seed + 'atg_to_stop.bed',"w+")
 	candidates = {}
 	trans_orfs = {}
 	coord_psites = {}
@@ -287,6 +296,8 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 			second_names[orf] = orf.split("--")[0]
 		if len(orf_seq.replace("*","")) < len_cutoff:
 			continue
+		elif len(orf_seq.replace("*","")) > max_len_cutoff:
+			continue			
 		for trans in overlaps[orf]:
 			if not trans[0] in transcriptome_fa:
 				continue
@@ -368,15 +379,15 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 	return candidates,trans_orfs,second_names,coord_psites
 
 
-def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder):
+def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder,seed):
 	'''Cluster ORFs'''
 	print("Collapsing shorter variants")
-	out = open(folder + '/tmp/atg_to_stop.ov','w+')
-	subprocess.call(['intersectBed', '-s','-a', folder + '/tmp/atg_to_stop.bed', '-b', folder + '/tmp/atg_to_stop.bed', '-wo'], stdout=out)
+	out = open(folder + '/tmp/' + seed + 'atg_to_stop.ov','w+')
+	subprocess.call(['intersectBed', '-s','-a', folder + '/tmp/' + seed + 'atg_to_stop.bed', '-b', folder + '/tmp/' + seed + 'atg_to_stop.bed', '-wo'], stdout=out)
 	out.close()
 	ovs = {}
 	ovs_psites = {}
-	for line in open(folder + '/tmp/atg_to_stop.ov'):
+	for line in open(folder + '/tmp/' + seed + 'atg_to_stop.ov'):
 		if "boundaries" in line:
 			ovs.setdefault(line.split("\t")[3],[])
 			ovs.setdefault(line.split("\t")[9],[])
@@ -431,7 +442,7 @@ def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder):
 	return exc,variants,variants_names,datasets
 
 
-def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name):
+def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed):
 	'''Select main transcript and write output'''
 	print("Writing output")
 	#Check Riboseq ORF annotations
@@ -459,6 +470,8 @@ def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,a
 	out3b = open(out_name + ".orfs.gtf","w+")
 	out4 = open(out_name + ".orfs.fa","w+")
 	outf = open(out_name + ".orfs.frames.bed","w+")
+	outlogs = open(out_name + ".logs","w+")
+	outlogs.write("input fasta:" + orfs_fa_file + "\ninput bed: " + orfs_bed_file + "\nannotation folder:" + folder + "\nmin_ength_cutoff: " + str(len_cutoff) + "\nmax_length_cutoff: " + str(max_len_cutoff).replace("999999999999","none") + "\ncollapse_method: " + str(method) + "\ncollapse_cutoff: " + str(col_thr) + "\ntotal_studies: " + ";".join(total_studies))
 	for orf in candidates:
 		if orf in exc:
 			continue
@@ -665,11 +678,11 @@ def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,a
 
 
 	outf.close()
-	outov = open(folder + '/tmp/frame_overlaps.ov','w+')
-	subprocess.call(['intersectBed','-s','-a', folder + '/tmp/' + orfs_bed_file.split("/")[-1] + "." + str(len_cutoff) + "." + str(col_thr) + '.orfs.frames.bed', '-b', psites_bed_file, '-wo'], stdout=outov)
+	outov = open(folder + '/tmp/' + seed + 'frame_overlaps.ov','w+')
+	subprocess.call(['intersectBed','-s','-a', out_name + '.orfs.frames.bed', '-b', psites_bed_file, '-wo'], stdout=outov)
 	outov.close()
 	cdsinf = []
-	for line in open(folder + '/tmp/frame_overlaps.ov'):
+	for line in open(folder + '/tmp/' + seed + 'frame_overlaps.ov'):
 		if line.split("\t")[1] == line.split("\t")[7]:
 			cdsinf.append(line.split("\t")[3])
 	cdsinf = list(set(cdsinf))
@@ -694,9 +707,14 @@ def write_output(orfs_bed_file,candidates,exc,variants,variants_names,datasets,a
 	for orf in riboseq_orfs:
 		if not orf in done:
 			if not "_var" in riboseq_orfs[orf]:
-				print(riboseq_orfs[orf] + " not mapped to this version\t" + orf)
+				outlogs.write(riboseq_orfs[orf] + " not mapped to this version\t" + orf + "\n")
 	out.close()
 	out3.close()
 	out3b.close()
 	out4.close()
+	outlogs.close()
+
+	for f in os.listdir(folder + '/tmp/'):
+		if seed in f:
+			os.remove(os.path.join(folder + '/tmp/', f))
 
