@@ -1,6 +1,6 @@
 ## README
 
-This readme is a guideline for any user that wants to use the main Methods to generate an unified set of Ribo-seq ORFs in this article: X
+This readme is a guideline for any user that wants to use the main Methods to generate an unified set of Ribo-seq ORFs in this article: [not published yet]
 
 While this script is designed to unify independent sets of ORFs and mapped them to a specific Ensembl version, it is not a tool to analyze ribosome-profiling data. However, GENCODE plans a Phase II to re-analyze ribosome-profiling datasets and generate consistent sets of ORFs.
 
