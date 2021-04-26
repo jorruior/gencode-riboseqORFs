@@ -128,7 +128,4 @@ if __name__ == '__main__':
 
 exit(0)
 
-#Add maximum length
-#Upload again
-
 
