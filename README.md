@@ -1,8 +1,8 @@
 ## README
 
-This readme is a guideline for any user that wants to use the main Methods to generate an unified set of Ribo-seq ORFs in this article: [not published yet]
+This readme is a guideline for any user that wants to generate an unified set of Ribo-seq ORFs and reproduced the Phase I ORF list publised in this article: [not published yet]
 
-While this script is designed to unify independent sets of ORFs and mapped them to a specific Ensembl version, it is not a tool to analyze ribosome-profiling data. However, GENCODE plans a Phase II to re-analyze ribosome-profiling datasets and generate consistent sets of ORFs.
+While this script is designed to unify independent sets of ORFs and map them to a specific Ensembl version, it is not a tool to analyze ribosome-profiling data. However, GENCODE plans to develop a Phase II to re-analyze ribosome-profiling datasets and call ORFs.
 
 
 **DEPENDENCIES:**
@@ -18,7 +18,7 @@ This script is based on python3 and shell, requiring some additional packages to
 
 **INPUT ANNOTATION FILES**: 
 
-This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will be required to collect all annotation files in a single folder <FOLDER> that will be required as input for the main script. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
+This pipeline requires a series of files in the correct format to analyze the data. First of all, the user will need to collect all annotation files in a single folder <FOLDER> that will be required as input for the main script. These files can be downloaded from Ensembl or GENCODE; we also included a bash script to automatically download and convert all files for a specific Ensembl release:
 ```
 bash scripts/retrieve_ensembl_data.sh <ENSEMBL_RELEASE (e.g. 101)> <GENOME_ASSEMBLY (e.g. GRCh38)>
 ```
