@@ -100,9 +100,10 @@ Options:
   -m METHOD, --collapse_method=METHOD
                         Method to cluster ORF variants. 'longest_string' will
                         collapse ORFs if the longest shared string is above -c
-                        threshold (default). 'psite_overlap' is a slower
-                        method that collapses ORFs if the fraction of shared
-                        psites is above -c threshold
+                        threshold and the start codon and/or stop codon are 
+                        shared (default). 'psite_overlap' is a slower method 
+                        that collapses ORFs if the fraction of shared psites
+                        is above -c threshold
   -a CALCULATE_COORDINATES, --make_annot_bed=CALCULATE_COORDINATES
                         If ORF BED file is not available, generate it from the
                         FASTA file. WARNING: BED file will be writen to the
