@@ -267,7 +267,10 @@ def insersect_orf_gtf(orfs_bed_file,transcriptome_gtf_file,folder):
 			if not line.split("\t")[4] in total_studies:
 				total_studies.append(line.split("\t")[4])
 			gene = line.split('gene_id "')[1].split('"')[0]
-			gene_name = line.split('gene_name "')[1].split('"')[0]
+                        if "gene_name" in line:
+                                gene_name = line.split('gene_name "')[1].split('"')[0]
+                        else:
+                                gene_name = line.split('gene_id "')[1].split('"')[0]
 			trans = line.split('transcript_id "')[1].split('"')[0]
 			g_biotype = line.split('gene_biotype "')[1].split('"')[0]
 			t_biotype = line.split('transcript_biotype "')[1].split('"')[0]
