@@ -117,6 +117,16 @@ Options:
                         mapping ORF sequences to the correct exon-intron
                         positions. Use 'none' if no file is given or -a is not
                         activated. (default = none)
+  -G FGENOMIC, --force_genomic=FGENOMIC
+                        If -a option is activated, this optional argument uses
+                        a BED file with ORF genomic coordinates to FORCE
+                        mapping ORF sequences to the correct exon-intron
+                        positions. ORFs that cannot be mapped to these genomic
+                        regions will be discarded. Use 'none' if no file is
+                        given or -a is not activated. (default = none)
+  -C CDS_CASES, --add_cds=CDS_CASES
+                        If 'yes', include CDS and non-unitary pseudogenes in
+                        the output GTF. (default = 'no')
 
                         
 ```
