@@ -860,7 +860,7 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 	out4.close()
 	outlogs.close()
 
-	for f in os.listdir(folder + '/tmp/'):
-	 	if seed in f:
-	 		os.remove(os.path.join(folder + '/tmp/', f))
+	# for f in os.listdir(folder + '/tmp/'):
+	# 	if seed in f:
+	# 		os.remove(os.path.join(folder + '/tmp/', f))
 

@@ -49,7 +49,9 @@ def main():
 	parser.add_option("-m","--collapse_method",action="store",dest="method",default="longest_string",help="Method to cluster ORF variants. 'longest_string' will collapse ORFs if the longest shared string is above -c threshold (default). 'psite_overlap' is a slower method that collapses ORFs if the fraction of shared psites is above -c threshold")
 	parser.add_option("-a","--make_annot_bed",action="store",dest="calculate_coordinates",default="no",help="If ORF BED file is not available, generate it from the FASTA file. WARNING: BED file will be writen to the filename given by -b/--bed. (ATG/NTG/XTG/no, default = no)")
 	parser.add_option("--multiple",action="store",dest="mult",default="yes",help="If -a option is activated, include ORFs that map to multiple genomic coordinates. (yes/no, default = yes)")
-	parser.add_option("-g","--genomic",action="store",dest="genomic",default="none",help="If -a option is activated, this optional argument uses a BED file with ORF genomic coordinates to help mapping ORF sequences to the correct exon-intron positions. Use 'none' if no file is given or -a is not activated. (default = none)")
+	parser.add_option("-g","--genomic",action="store",dest="genomic",default="none",help="If -a option is activated, this optional argument uses a BED file with ORF genomic coordinates to HELP mapping ORF sequences to the correct exon-intron positions. ORFs that cannot be mapped to these genomic regions will be mapped to alternative positions if possible. Use 'none' if no file is given or -a is not activated. (default = none)")
+	parser.add_option("-G","--force_genomic",action="store",dest="fgenomic",default="none",help="If -a option is activated, this optional argument uses a BED file with ORF genomic coordinates to FORCE mapping ORF sequences to the correct exon-intron positions. ORFs that cannot be mapped to these genomic regions will be discarded. Use 'none' if no file is given or -a is not activated. (default = none)")
+	parser.add_option("-C","--add_cds",action="store",dest="cds_cases",default="no",help="If 'yes', include CDS and non-unitary pseudogenes in the output GTF. (default = 'no')")
 
 	(opt,args)=parser.parse_args()
 
@@ -71,7 +73,9 @@ def main():
 	calculate_coordinates = opt.calculate_coordinates
 	mult = opt.mult
 	genomic = opt.genomic
-	if opt.out_name != "input_bed":
+	fgenomic = opt.fgenomic
+	cds_cases = opt.cds_cases
+	if opt.out_name == "input_bed":
 		out_name = orfs_bed_file
 	else:
 		out_name = opt.out_name
@@ -90,8 +94,16 @@ def main():
 	if (calculate_coordinates == "no") and (genomic != "none"):
 		print("Error: " + opt.genomic + " is not a valid --multiple argument when -a is not enabled\n")
 		exit()
+	if (calculate_coordinates == "no") and (fgenomic != "none"):
+		print("Error: " + opt.fgenomic + " is not a valid --multiple argument when -a is not enabled\n")
+		exit()
+	elif (genomic != "none") and (fgenomic != "none"):
+		print("Error: -g and -G are mutually exclusive parameters, please use only one of them\n")
+		exit()		
 	elif genomic != "none":
 		check_file(genomic)
+	elif fgenomic != "none":
+		check_file(fgenomic)	
 
 	#Annotation files
 	transcriptome_fa_file = folder + "/Homo_sapiens.GRCh38.trans.fa" #include both mRNA and ncRNA, only transcript ID in header, e.g. cat Ens103/Homo_sapiens.GRCh38.cdna.all.fa Ens103/Homo_sapiens.GRCh38.ncrna.fa | cut -d"." -f1,1 > prueba; mv prueba Ens103/Homo_sapiens.GRCh38.trans.fa
@@ -114,18 +126,20 @@ def main():
 	(orfs_fa,transcriptome_fa,proteome_fa) = functions.load_fasta(orfs_fa_file,transcriptome_fa_file,proteome_fa_file)
 	gtf = functions.parse_gtf(transcriptome_gtf_file,"exon")
 	if calculate_coordinates != "no":
-		functions.make_bed(orfs_fa,transcriptome_fa,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult,genomic)
+		functions.make_bed(orfs_fa,transcriptome_fa,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult,genomic,fgenomic)
 	(appris,supp) = functions.read_support(t_support)
 	(overlaps,overlaps_cds,other_overlaps,total_studies,seed) = functions.insersect_orf_gtf(orfs_bed_file,transcriptome_gtf_file,folder)
 	other_overlaps = functions.pseudo_or_cds_ov(orfs_bed_file,transcriptome_gtf_file,other_overlaps,folder,seed)
 	(candidates,trans_orfs,second_names,coord_psites) = functions.orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_cutoff,max_len_cutoff,folder,seed)
 	(exc,variants,variants_names,datasets) = functions.exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder,seed)
-	functions.write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed,genomic)
-
+	functions.write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed,genomic,fgenomic,cds_cases)
 
 if __name__ == '__main__':
 	main()
 
 exit(0)
+
+#Add maximum length
+#Upload again
 
 
