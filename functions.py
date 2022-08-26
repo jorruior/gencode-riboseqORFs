@@ -15,7 +15,7 @@ __contributor__="..."
 __copyright__ = ""
 __credits__ = []
 __license__ = ""
-__version__="1.0.0"
+__version__="1.1.0"
 __maintainer__ = "Jorge Ruiz-Orera"
 __email__ = "jorruior@gmail.com"
 
@@ -114,32 +114,35 @@ def read_support(t_support):
 
 	return appris,supp
 
-def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult,genomic):
+def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs_bed_file,out_name,mult,genomic,fgenomic):
 	print("Matching ORF to transcripts, it can take a while... STEP 1 - " + str(datetime.now()))
 	nomap = open(out_name + "_unmapped","w+")
 	altmap = open(out_name + "_altmapped","w+")
-	trans_sequences = []
-	seqs = {}
 	lines = []
 	multiple = []
-	for t in trans:
-		if not t in gtf:
-			continue
-		trans_sequences.append(str(trans[t].seq.translate(cds = False)))	
-		trans_sequences.append(str(trans[t].seq[1:].translate(cds = False)))	
-		trans_sequences.append(str(trans[t].seq[2:].translate(cds = False)))
-		seqs[str(trans[t].seq.translate(cds = False))] = t
-		seqs[str(trans[t].seq[1:].translate(cds = False))] = t
-		seqs[str(trans[t].seq[2:].translate(cds = False))] = t
-	gen_bed = {}
+	if fgenomic == "none":
+		trans_sequences = []
+		seqs = {}
+		for t in trans:
+			if not t in gtf:
+				continue
+			trans_sequences.append(str(trans[t].seq.translate(cds = False)))	
+			trans_sequences.append(str(trans[t].seq[1:].translate(cds = False)))	
+			trans_sequences.append(str(trans[t].seq[2:].translate(cds = False)))
+			seqs[str(trans[t].seq.translate(cds = False))] = t
+			seqs[str(trans[t].seq[1:].translate(cds = False))] = t
+			seqs[str(trans[t].seq[2:].translate(cds = False))] = t
 	if genomic != "none":
-		for line in open(genomic):
+		fgenomic = genomic
+	if fgenomic != "none":
+		gen_bed = {}
+		for line in open(fgenomic):
 			name = line.split("\t")[3] + "--" + line.split("\t")[4]
 			if not name in gen_bed:
 				gen_bed[name] = [line.split("\t")[0],int(line.split("\t")[1])-10,int(line.split("\t")[2])+10]
 			if int(line.split("\t")[1])-10 < gen_bed[name][1]:
 				gen_bed[name][1] = int(line.split("\t")[1])-10
-			if int(line.split("\t")[2])+10 > gen_bed[name][2]:		
+			if int(line.split("\t")[2])+10 > gen_bed[name][2]:
 				gen_bed[name][2] = int(line.split("\t")[2])+10
 	n2 = 0
 	for p in prot:
@@ -156,15 +159,51 @@ def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs
 			continue	
 		elif (calculate_coordinates == "ATG") and (orf_seq[0] != "M"):
 			nomap.write(p + "\tNTG\t" + orf_seq + "\n")
-			continue #Perhaps save in a different file
+			continue
 		elif (calculate_coordinates == "NTG") and (orf_seq[0] == "M"):
 			nomap.write(p + "\tATG\t" + orf_seq + "\n")
-			continue #Perhaps save in a different file		
-		res = list(filter(lambda x: orf_seq in x, trans_sequences))
+			continue
+		det = 0
+		if fgenomic != "none":
+			trans_sequences2 = []
+			seqs2 = {}
+			if not p in gen_bed:
+				if genomic == "none":
+					nomap.write(p + "\tunmapped\t" + orf_seq + "\n")
+					continue
+			for t in trans:
+				if not t in gtf:
+					if genomic == "none":
+						nomap.write(p + "\tunmapped\t" + orf_seq + "\n")
+						continue
+				elif p in gen_bed:
+					if gtf[t].chrm != gen_bed[p][0]:
+						if genomic == "none":
+							nomap.write(p + "\tunmapped\t" + orf_seq + "\n")
+							continue
+					if (gtf[t].start[0] >= gen_bed[p][1] and gtf[t].start[0] <= gen_bed[p][2]) or (gtf[t].end[-1] >= gen_bed[p][1] and gtf[t].end[-1] <= gen_bed[p][2]):
+						det = 1
+						trans_sequences2.append(str(trans[t].seq.translate(cds = False)))
+						trans_sequences2.append(str(trans[t].seq[1:].translate(cds = False)))
+						trans_sequences2.append(str(trans[t].seq[2:].translate(cds = False)))
+						seqs2[str(trans[t].seq.translate(cds = False))] = t
+						seqs2[str(trans[t].seq[1:].translate(cds = False))] = t
+						seqs2[str(trans[t].seq[2:].translate(cds = False))] = t
+			if len(trans_sequences2) == 0:
+				if genomic == "none":
+					nomap.write(p + "\tunmapped\t" + orf_seq + "\n")
+					continue
+		if det == 0:
+			res = list(filter(lambda x: orf_seq in x, trans_sequences))
+		else:
+			res = list(filter(lambda x: orf_seq in x, trans_sequences2))
 		done_coords = []
 		if len(res) > 0:
 			for r in res:
-				t = seqs[r]
+				if det == 0:
+					t = seqs[r]
+				else:
+					t = seqs2[r]
 
 				l = len(str(trans[t].seq))
 				f1 = str(trans[t].seq.translate(cds = False)).find(str(orf_seq))
@@ -200,23 +239,6 @@ def make_bed(prot,trans,gtf,len_cutoff,max_len_cutoff,calculate_coordinates,orfs
 							orf_coords[1].append(gtf[t].end[n])
 
 					cumu = cumu + (gtf[t].end[n] - gtf[t].start[n] + 1)
-
-				if genomic != "none":
-					ov = 0
-					if p in gen_bed:
-						if gtf[t].chrm != gen_bed[p][0]:
-							nomap.write(p + "\tunassigned\t" + orf_seq + "\n")
-							continue
-						else:
-							for n,coord in enumerate(orf_coords[0]):
-								if (orf_coords[0][n] >= gen_bed[p][1] and orf_coords[0][n] <= gen_bed[p][2]) or (orf_coords[1][n] >= gen_bed[p][1]) and (orf_coords[1][n] <= gen_bed[p][2]):
-									ov = 1
-							if ov == 0:
-								nomap.write(p + "\tunassigned\t" + orf_seq + "\n")
-								continue
-					else:
-						nomap.write(p + "\tunassigned\t" + orf_seq + "\n")
-						continue
 
 				if len(done_coords) > 0: #Some ORFs can map to multiple genomic regions
 					if (orf_coords[0][0] != done_coords[0][0]) and (orf_coords[1][-1] != done_coords[1][-1]):
@@ -267,10 +289,10 @@ def insersect_orf_gtf(orfs_bed_file,transcriptome_gtf_file,folder):
 			if not line.split("\t")[4] in total_studies:
 				total_studies.append(line.split("\t")[4])
 			gene = line.split('gene_id "')[1].split('"')[0]
-                        if "gene_name" in line:
-                                gene_name = line.split('gene_name "')[1].split('"')[0]
-                        else:
-                                gene_name = line.split('gene_id "')[1].split('"')[0]
+			if "gene_name" in line:
+				gene_name = line.split('gene_name "')[1].split('"')[0]
+			else:
+				gene_name = line.split('gene_id "')[1].split('"')[0]
 			trans = line.split('transcript_id "')[1].split('"')[0]
 			g_biotype = line.split('gene_biotype "')[1].split('"')[0]
 			t_biotype = line.split('transcript_biotype "')[1].split('"')[0]
@@ -295,6 +317,8 @@ def pseudo_or_cds_ov(orfs_bed_file,transcriptome_gtf_file,other_overlaps,folder,
 			name = line.split("\t")[3] + "--" + line.split("\t")[4]
 			other_overlaps.setdefault(name,["0","0","0"])
 			other_overlaps[name][0] = "1" 
+			if "unitary" in line:
+				other_overlaps[name][0] = "2"
 		if "\tCDS\t" in line:
 			name = line.split("\t")[3] + "--" + line.split("\t")[4]
 			if ("\t+\t" in line) and ("\t-\t" in line):
@@ -327,10 +351,10 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 		if len(orf_seq.replace("*","")) < len_cutoff:
 			continue
 		elif len(orf_seq.replace("*","")) > max_len_cutoff:
-			continue			
+			continue
 		for trans in overlaps[orf]:
 			if not trans[0] in transcriptome_fa:
-				continue
+				continue	
 			gene = trans[1]
 			genename = trans[4]
 			f1 = str(transcriptome_fa[trans[0]].seq.translate(cds = False)).find(str(orf_seq))
@@ -342,6 +366,7 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 				continue
 			if trans[3] == "protein_coding": #Gene biotype
 				cat2 = "protein_coding"
+			intersection = []
 			if trans[0] in overlaps_cds: #Protein-codingç
 				prot = overlaps_cds[trans[0]]
 				c1 = str(transcriptome_fa[trans[0]].seq.translate(cds = False)).find(str(proteome_fa[prot].seq))
@@ -350,6 +375,8 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 				cc = len(str(proteome_fa[prot].seq))
 				ci = [c1,c2,c3].index(max([c1,c2,c3]))
 				c = max(c1,c2,c3)*3 + ci
+				if c == -3:
+					continue
 
 				fr = range(f,f+(len(orf_seq)*3))
 				cr = range(c,c+(cc*3))
@@ -377,7 +404,7 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 				cat = "lncRNA"
 
 			candidates.setdefault(orf,[])
-			candidates[orf].append([trans[0],gene,genename,cat,cat2,fi,f,orf_seq])
+			candidates[orf].append([trans[0],gene,genename,cat,cat2,fi,f,orf_seq,len(intersection)])
 
 			trans_orfs.setdefault(trans[0],[])
 			trans_orfs[trans[0]].append([orf,fi,f,orf_seq])
@@ -456,7 +483,6 @@ def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder,se
 								exc.append(orf2_name)
 					elif method == "psite_overlap":
 						match = len([value for value in list(set(coord_psites[orf[0]])) if value in list(set(coord_psites[orf2_name]))])
-						print(orf[0] + "\t" + orf2_name + "\t" + str(match) + "\n" + str([value for value in coord_psites[orf[0]] if value in coord_psites[orf2_name]]))
 						if match > 0:
 							if (len(orf[3]) >= len(orf2[0][7])) and (match > (float(len(orf2[0][7]))*col_thr)): #Remove shorter variant if intersect more than thr%
 								if not orf2[0][7] in variants[orf[0]]:
@@ -472,36 +498,60 @@ def exclude_variants(trans_orfs,col_thr,candidates,method,coord_psites,folder,se
 	return exc,variants,variants_names,datasets
 
 
-def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed,genomic):
+def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_names,datasets,appris,supp,gtf,transcriptome_fa,second_names,len_cutoff,max_len_cutoff,col_thr,total_studies,other_overlaps,psites_bed_file,folder,out_name,method,seed,genomic,fgenomic,cds_cases):
 	'''Select main transcript and write output'''
 	print("Writing output")
 	#Check Riboseq ORF annotations
 	done = []
 	riboseq_orfs = {}
-	for line in open("list_riboseq_orfs.txt"):
+	codes = {}
+	for line in open("list_riboseqs/list_riboseq_orfs.txt"):
 		if "\tCDS\t" in line or "\tNMD\t" in line:
 			continue
-		seq = line.split("\t")[3]
-		riboseq_orfs[seq] = line.split("\t")[0]
-		if len(line.split("\t")[4].rstrip("\n")) > 0:
-			if ";" in line.split("\t")[4].rstrip("\n"):
-				for s in line.split("\t")[4].rstrip("\n"):
-					riboseq_orfs[s] = line.split("\t")[0] + "_var"
+		if line.startswith("#"):
+			continue
+		seq = line.split("\t")[4]
+		if not seq in riboseq_orfs:
+			riboseq_orfs[seq] = []
+		riboseq_orfs[seq].append([line.split("\t")[0],line.split("\t")[1],line.split("\t")[3]])
+		if "norep" in line:
+			if not line.split("\t")[0].split("norep")[0].replace("c","") + "norep" in codes:
+				codes[line.split("\t")[0].split("norep")[0].replace("c","") + "norep"] = 0
+			if int(line.split("\t")[0].split("norep")[1]) > codes[line.split("\t")[0].split("norep")[0].replace("c","") + "norep"]:
+				codes[line.split("\t")[0].split("norep")[0].replace("c","") + "norep"] = int(line.split("\t")[0].split("norep")[1])
+		elif "riboseqorf" in line:
+			if not line.split("\t")[0].split("riboseqorf")[0].replace("c","") + "riboseqorf" in codes:
+				codes[line.split("\t")[0].split("riboseqorf")[0].replace("c","") + "riboseqorf"] = 0
+			if int(line.split("\t")[0].split("riboseqorf")[1]) > codes[line.split("\t")[0].split("riboseqorf")[0].replace("c","") + "riboseqorf"]:
+				codes[line.split("\t")[0].split("riboseqorf")[0].replace("c","") + "riboseqorf"] = int(line.split("\t")[0].split("riboseqorf")[1])
+
+		if line.split("\t")[5].rstrip("\n") != "none":
+			if ";" in line.split("\t")[5].rstrip("\n"):
+				for s in line.split("\t")[5].rstrip("\n"):
+					if not s in riboseq_orfs:
+						riboseq_orfs[s] = []
+					riboseq_orfs[s].append([line.split("\t")[0] + "_var",line.split("\t")[1],line.split("\t")[3]])
 			else:
-				riboseq_orfs[line.split("\t")[4].rstrip("\n")] = line.split("\t")[0] + "_var"
+				if not line.split("\t")[5].rstrip("\n") in riboseq_orfs:
+					riboseq_orfs[line.split("\t")[5].rstrip("\n")] = []
+				riboseq_orfs[line.split("\t")[5].rstrip("\n")].append([line.split("\t")[0] + "_var",line.split("\t")[1],line.split("\t")[3]])
 
 	outs = []
 	outs2 = []
+	new_cases = {}
+	all_biotypes = {}
+	same_prot = []
 	out = open(out_name + ".orfs.out","w+")
-	out.write("orf_id\tphaseI_id\tchrm\tstarts\tends\tstrand\ttrans\tgene\tgene_name\torf_biotype\tgene_biotype\tpep\torf_length\tn_datasets\t")
+	out.write("orf_id\tversion\tchrm\tstarts\tends\tstrand\ttrans\tgene\tgene_name\torf_biotype\tgene_biotype\tpep\torf_length\tn_datasets\t")
 	out.write("\t".join(total_studies))
-	out.write("\tpseudogene_ov\tCDS_ov\tCDS_as_ov\tall_trans\tall_genes\tall_gene_names\tn_variants\tseq_variants\tall_orf_names\n")
+	out.write("\tpseudogene_ov\tCDS_ov\tCDS_as_ov\tall_trans\tall_genes\tall_gene_names\tn_variants\tseq_variants\tall_orf_names\tphaseI_id\tphaseI_biotype\n")
 	out3 = open(out_name + ".orfs.bed","w+")
 	out3b = open(out_name + ".orfs.gtf","w+")
 	out4 = open(out_name + ".orfs.fa","w+")
 	outf = open(out_name + ".orfs.frames.bed","w+")
+	outf2 = open(out_name + ".orfs.allframes.bed","w+")
 	outlogs = open(out_name + ".logs","w+")
-	outlogs.write("input fasta: " + orfs_fa_file + "\ninput bed: " + orfs_bed_file + "\nannotation folder:" + folder + "\nmin_length_cutoff: " + str(len_cutoff) + "\nmax_length_cutoff: " + str(max_len_cutoff).replace("999999999999","none") + "\ncollapse_method: " + str(method) + "\ncollapse_cutoff: " + str(col_thr) + "\ngenomic_bed : " + str(genomic) + "\ntotal_studies: " + ";".join(total_studies) + "\n\n")
+	outlogs.write("#input fasta: " + orfs_fa_file + "\n#input bed: " + orfs_bed_file + "\n#annotation folder:" + folder + "\n#min_length_cutoff: " + str(len_cutoff) + "\n#max_length_cutoff: " + str(max_len_cutoff).replace("999999999999","none") + "\n#collapse_method: " + str(method) + "\n#collapse_cutoff: " + str(col_thr) + "\n#genomic_bed : " + str(genomic) + "\n#forced_genomic_bed: " + str(fgenomic) + "\n#total_studies: " + ";".join(total_studies) + "\n")
 	for orf in candidates:
 		if orf in exc:
 			continue
@@ -625,6 +675,8 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 				#Annotate gene as pseudogene
 				if other_overlaps[orf][0] == "1":
 					trans[4] = "pseudogene"
+				elif other_overlaps[orf][0] == "2":
+					trans[4] = "unitary_pseudogene"
 				#Vector 0/1 studies
 				stu = []
 				for study in total_studies:
@@ -634,11 +686,14 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 						stu.append("0")
 
 				#Compare with original Riboseq annotation
+				id2 = "none"
 				if trans[7] in riboseq_orfs:
-					done.append(trans[7])
-					id2 = riboseq_orfs[trans[7]]
-				else:
-					id2 = "unknown"
+					if len(riboseq_orfs[trans[7]]) == 1:
+						id2 = riboseq_orfs[trans[7]][0][0]
+					else:
+						for elemento in riboseq_orfs[trans[7]]:
+							if elemento[2] == trans[1]:
+								id2 = elemento[0]
 
 				#Write coordinate output
 				all_coords = [[],[],gtf[t].chrm,gtf[t].strand,[],[]]
@@ -693,25 +748,33 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 						elif line.split("\t")[5].rstrip("\n") == "-":
 							phase = 2
 					for coord in range(int(line.split("\t")[1]),int(line.split("\t")[2])+1):
-						if phase % 3 == 2:
+						if line.split("\t")[5].rstrip("\n") == "+":
+							outf2.write(line.split("\t")[0] + "\t" + str(coord) + "\t" + str(coord) + "\t" + id + "\tp" + str(phase % 3) + "\t" + line.split("\t")[5].rstrip("\n") + "\n")
+						else:
+							outf2.write(line.split("\t")[0] + "\t" + str(coord) + "\t" + str(coord) + "\t" + id + "\tp" + str((phase+1) % 3) + "\t" + line.split("\t")[5].rstrip("\n") + "\n")
+						if phase % 3 == 2:							
 							outf.write(line.split("\t")[0] + "\t" + str(coord) + "\t" + str(coord) + "\t" + id + "\t" + str(phase) + "\t" + line.split("\t")[5].rstrip("\n") + "\n")
 						phase += 1
-
+				
 				for line in all_coords[5]:
 					outs2.append(line.replace("P1_ID",id))
 
-				outs.append(id + "\t" + id2 + "\t" + all_coords[2] + "\t" + ";".join(all_coords[0]) + "\t" + ";".join(all_coords[1]) + "\t" + all_coords[3] + "\t" + trans[0] + "\t" + trans[1] + "\t" + trans[2] + "\t" + trans[3] + "\t" + trans[4] + "\t" + trans[7] + "\t" + str(len(trans[7])*3) + "\t" + str(len(list(set(datasets[orf])))) + "\t" + "\t".join(stu) + "\t" + \
-				"\t".join(other_overlaps[orf]) + "\t" + ";".join(all_t) + "\t" + ";".join(all_g) + "\t" + ";".join(all_gn) + "\t" + str(len(variants[orf])) + "\t" + ";".join(variants[orf]) + "\t" + ";".join(new_variant_names) + "\n")
+				outs.append(id + "\tphaseI\t" + all_coords[2] + "\t" + ";".join(all_coords[0]) + "\t" + ";".join(all_coords[1]) + "\t" + all_coords[3] + "\t" + trans[0] + "\t" + trans[1] + "\t" + trans[2] + "\t" + trans[3] + "\t" + trans[4] + "\t" + trans[7] + "\t" + str(len(trans[7])*3) + "\t" + str(len(list(set(datasets[orf])))) + "\t" + "\t".join(stu) + "\t" + \
+				"\t".join(other_overlaps[orf]) + "\t" + ";".join(all_t) + "\t" + ";".join(all_g) + "\t" + ";".join(all_gn) + "\t" + str(len(variants[orf])) + "\t" + ";".join(variants[orf]) + "\t" + ";".join(new_variant_names))
+				variants[trans[7]] = variants[orf]
 
 				#Write FASTA
-				out4.write(">" + id + "\n" + trans[7] + "\n")	
-
+				out4.write(">" + id + "\n" + trans[7] + "\n")
+				if (len(trans[7])*3-3) == int(trans[8]):
+					same_prot.append(trans[7])
 
 	outf.close()
+	outf2.close()
 	outov = open(folder + '/tmp/' + seed + 'frame_overlaps.ov','w+')
 	subprocess.call(['intersectBed','-s','-a', out_name + '.orfs.frames.bed', '-b', psites_bed_file, '-wo'], stdout=outov)
 	outov.close()
 	cdsinf = []
+	annot = {}
 	for line in open(folder + '/tmp/' + seed + 'frame_overlaps.ov'):
 		if line.split("\t")[1] == line.split("\t")[7]:
 			cdsinf.append(line.split("\t")[3])
@@ -719,10 +782,44 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 	for line in outs:
 		id = line.split("\t")[0]
 		line2 = line
+
 		if id in cdsinf:
 			if line.split("\t")[9] != "CDS":
 				line2 = line2.replace("\t" + line.split("\t")[9] + "\t","\tCDS\t")
-		out.write(line2)
+
+		#Compare with original Riboseq annotation
+		if line2.split("\t")[9] in ("CDS","NMD"):
+			bio2 = "annotated"
+			id2 = id
+			annot[line.split("\t")[11]] = line2.split("\t")[9]
+		elif line2.split("\t")[10] == "pseudogene":
+			bio2 = "annotated"
+			id2 = id
+			annot[line.split("\t")[11]] = line2.split("\t")[10]	
+		elif line.split("\t")[11] in riboseq_orfs:
+			if len(riboseq_orfs[line.split("\t")[11]]) == 1:
+				done.append(riboseq_orfs[line.split("\t")[11]][0][0].replace("_var",""))
+				id2 = riboseq_orfs[line.split("\t")[11]][0][0]
+				bio2 = riboseq_orfs[line.split("\t")[11]][0][1]
+			else:
+				for elemento in riboseq_orfs[line.split("\t")[11]]: #In the event of two sequences being the same, the gene_id will be inspected, be aware in case the gene_id changes across versions
+					if elemento[2] == line.split("\t")[7]:
+						done.append(elemento[0].replace("_var",""))
+						id2 = elemento[0]
+						bio2 = elemento[1]
+		else:
+			if int(line.split("\t")[13]) == 1:
+				id2 = "c" + id.split("_")[1].split(":")[0] + "norep" + str(codes[id.split("_")[1].split(":")[0] + "norep"]+1)
+				codes[id.split("_")[1].split(":")[0] + "norep"] = codes[id.split("_")[1].split(":")[0] + "norep"] + 1
+			else:
+				id2 = "c" + id.split("_")[1].split(":")[0] + "riboseqorf" + str(codes[id.split("_")[1].split(":")[0] + "riboseqorf"]+1)
+				codes[id.split("_")[1].split(":")[0] + "riboseqorf"] = codes[id.split("_")[1].split(":")[0] + "riboseqorf"] + 1
+			bio2 = "novel"
+			new_cases[id2] = line.split("\t")[11]
+
+		out.write(line2 + "\t" + id2 + "\t" + bio2 + "\n")
+		all_biotypes[line.split("\t")[11]] = [line2.split("\t")[9],line2.split("\t")[7]]
+
 	for line in outs2:
 		id = line.split('orf_id "')[1].split('"')[0]
 		bio = line.split('orf_biotype "')[1].split('"')[0]
@@ -732,12 +829,31 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 			if bio != "CDS":
 				line2 = line2.replace("\t" + bio + "\t","\tCDS\t")
 				bio = "CDS"
-		if (bio != "CDS") and (biog != "pseudogene"): #Not include CDS and pseudogenes in GTF
+		if ((bio != "CDS") and (biog != "pseudogene")) or (cds_cases == "yes"): #Not include CDS and non-unitary pseudogenes in GTF
 			out3b.write(line2)
 	for orf in riboseq_orfs:
-		if not orf in done:
-			if not "_var" in riboseq_orfs[orf]:
-				outlogs.write(riboseq_orfs[orf] + " not mapped to this version\t" + orf + "\n")
+		for orf2 in riboseq_orfs[orf]:
+			if "_var" in orf2[0]:
+				continue
+			others = "none"
+			if orf in variants:
+				if len(variants[orf]) > 0:
+					others = ";".join(variants[orf])
+			
+			if not orf2[0] in done:
+				if orf in annot:
+					if orf in same_prot:
+						outlogs.write(orf2[0] + "\t" + annot[orf] + "\tannotated_complete\tunknown\t" + orf + "\t" + others + "\n")
+					else:
+						outlogs.write(orf2[0] + "\t" + annot[orf] + "\tannotated_alt\tunknown\t" + orf + "\t" + others + "\n")
+				else:
+					outlogs.write(orf2[0] + "\t" + orf2[1] + "\tretired\tunknown\t" + orf + "\t" + others + "\n")
+			elif orf in all_biotypes:
+				outlogs.write(orf2[0] + "\t" + all_biotypes[orf][0] + "\tmapped\t" + all_biotypes[orf][1] + "\t" + orf + "\t" + others + "\n")
+			else:
+				outlogs.write(orf2[0] + "\tvariant\tmapped\tunknown\t" + orf + "\t" + others + "\n")
+	for orf in new_cases:
+		outlogs.write(orf + "\t" + all_biotypes[new_cases[orf]][0] + "\tnew\t" + all_biotypes[new_cases[orf]][1] + "\t" + new_cases[orf] + "\t" + others + "\n")
 	out.close()
 	out3.close()
 	out3b.close()
@@ -745,6 +861,6 @@ def write_output(orfs_fa_file,orfs_bed_file,candidates,exc,variants,variants_nam
 	outlogs.close()
 
 	for f in os.listdir(folder + '/tmp/'):
-		if seed in f:
-			os.remove(os.path.join(folder + '/tmp/', f))
+	 	if seed in f:
+	 		os.remove(os.path.join(folder + '/tmp/', f))
 
