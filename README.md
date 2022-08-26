@@ -191,6 +191,10 @@ Outputs:
 **seq_variants**:	*Amino acid protein sequences of the alternative ORF isoforms*
 
 **all_orf_names**:	*Original names of the identified ORFs in each Ribo-seq dataset*
+       
+**phase_id:**     *Identifer for the Ribo-seq ORF in Phase I*
+       
+**phase_biotype:**     *Identifer for the Ribo-seq ORF biotype in Phase I*
 
 If **-a** is enabled, the script generates two additional files '<OUT_NAME>.**altmapped**' and '<OUT_NAME>.**unmapped**' with additional statistics about ORFs that did not map to the transcriptome or that map to multiple genomic regions (in this case, a random region is selected if **--multiple** is set to yes). 
 
