@@ -369,10 +369,10 @@ def orf_tags(overlaps,overlaps_cds,orfs_fa,transcriptome_fa,proteome_fa,gtf,len_
 			intersection = []
 			if trans[0] in overlaps_cds: #Protein-codingç
 				prot = overlaps_cds[trans[0]]
-				c1 = str(transcriptome_fa[trans[0]].seq.translate(cds = False)).find(str(proteome_fa[prot].seq))
-				c2 = str(transcriptome_fa[trans[0]].seq[1:].translate(cds = False)).find(str(proteome_fa[prot].seq))
-				c3 = str(transcriptome_fa[trans[0]].seq[2:].translate(cds = False)).find(str(proteome_fa[prot].seq))
-				cc = len(str(proteome_fa[prot].seq))
+				c1 = str(transcriptome_fa[trans[0]].seq.translate(cds = False)).find(str(proteome_fa[prot].seq).replace("X",""))
+				c2 = str(transcriptome_fa[trans[0]].seq[1:].translate(cds = False)).find(str(proteome_fa[prot].seq).replace("X","")
+				c3 = str(transcriptome_fa[trans[0]].seq[2:].translate(cds = False)).find(str(proteome_fa[prot].seq).replace("X","")
+				cc = len(str(proteome_fa[prot].seq).replace("X","")
 				ci = [c1,c2,c3].index(max([c1,c2,c3]))
 				c = max(c1,c2,c3)*3 + ci
 				if c == -3:
