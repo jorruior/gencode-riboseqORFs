@@ -4,8 +4,9 @@ This readme is a guideline for any user that wants to generate an unified set of
 
 While this script is designed to unify independent sets of ORFs and map them to a specific Ensembl version, it is not a tool to analyze ribosome-profiling data. However, GENCODE plans to develop a Phase II to re-analyze ribosome-profiling datasets and call ORFs.
 
-Version 1.1 (2022.09.19):
+**Version 1.1 (2022.09.19):**
 -The updated version also includes and considers annotated CDS sequences without annotated start and/or stop codons. Phase I contains 48 Ribo-seq ORFs overlapping to incomplete proteins.
+
 -Unitary pseudogenes are now considered as a separate category and included in the output files. GENCODE plans to include this category in next updates, but they were not considered initially in Phase I.
 
 
