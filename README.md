@@ -223,6 +223,6 @@ In this example, the first ORF was not fully map to any transcript isoform (**un
 **TEST: GENERATING THE PHASE I RIBO-SEQ ORF LIST -Ensembl v.101-**
 ```
 bash scripts/retrieve_ensembl_data.sh 101 GRCh38
-python3 ORF_mapper_to_GENCODE.py -d Ens101 -f phaseI/sORFs_genomic_hg38.prot.20210329.fa -b phaseI/sORFs_genomic_hg38.20210329.bed -a no
+python3 ORF_mapper_to_GENCODE.py -d Ens101 -f phaseI/sORFs_genomic_hg38.prot.20210329.fa -b phaseI/sORFs_genomic_hg38.prot.20210329.bed -a no
 #Pseudogenes and annotated CDS should be excluded from the output
 ```
